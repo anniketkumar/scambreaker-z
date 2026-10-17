@@ -135,6 +135,9 @@ class LLM:
 
 def backend_info(llm: LLM | None) -> dict:
     info: dict = {}
+    if llm and llm.url:  # served by the llama.cpp server container (s390x build with VXE)
+        return {"server": "llama.cpp server · s390x VXE build", "model": Path(llm.path).name if llm.path else None,
+                "build": getattr(llm, "build", None)}
     try:
         import llama_cpp  # noqa: PLC0415
 

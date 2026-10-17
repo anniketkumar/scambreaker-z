@@ -6,6 +6,7 @@ Rate and pause can be changed live through the `replay:control` key (set by the 
 from __future__ import annotations
 
 import argparse
+import platform
 import socket
 import time
 from pathlib import Path
@@ -76,7 +77,8 @@ def run(argv: list[str] | None = None) -> None:
                     time.sleep(ahead)
                 if time.time() - t0 > 5:  # re-anchor so rate changes apply quickly
                     t0, sent = time.time(), 0
-            bus.set("proof:replayer", {"service": "replayer", "host": socket.gethostname(), "loop": loop_no,
+            bus.set("proof:replayer", {"service": "replayer", "host": socket.gethostname(), "machine": platform.machine(),
+                                       "loop": loop_no,
                                        "progress": round((i - start) / n, 4), "events_total": n, "tps_target": tps,
                                        "ts": time.time()})
         if not args.loop:

@@ -41,7 +41,7 @@ Everything below was measured on our LinuxONE Community Cloud VM: an **IBM z17**
 | **CPACF crypto + encryption at rest** | All data, models and the audit trail live on a **LUKS2 volume (AES-XTS, 512-bit key)**. The kernel uses the `xts-aes-s390` driver, i.e. the CPACF crypto unit. | `cryptsetup status`, `/proc/crypto` ([evidence](docs/evidence/)) |
 | **Containers + isolation** | Docker Compose with six services. The AI services sit on an `internal` network **with no route to the internet**, run as non-root with all capabilities dropped and `no-new-privileges`. | Live check: an outbound connection from the Granite container fails ([evidence](docs/evidence/)) |
 | **Tamper-evident audit** | Every non-ALLOW decision is appended to a SHA-256 hash-chained log; `verify` detects any edit. | Live "Platform proof" panel → *Verify hash chain now* |
-| **Throughput and latency** | A point-in-time feature engine and the models in one stateful scorer, fed by Redis Streams. | Replaying the test days at **1,520 transfers/s: p50 19 ms, p99 80 ms**, measured from bus to decision. The feature engine processes about 60K events/s; full training takes 203 s on 3 vCPUs. |
+| **Throughput and latency** | A point-in-time feature engine and the models in one stateful scorer, fed by Redis Streams. | One scorer process sustains **4,020 transfers/s at p99 43 ms** (bus to decision) and saturates near 5,200/s ([chart](docs/results/e2e.png)). The feature engine processes about 60K events/s; full training takes 203 s on 3 vCPUs. |
 
 The console's **Platform proof** panel recomputes these facts live on the server (architecture, NNPA flag, loaded zDNN libraries, LUKS/CPACF, egress, audit chain). Nothing is hard-coded.
 

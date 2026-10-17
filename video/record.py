@@ -46,8 +46,27 @@ def main() -> None:
     ap.add_argument("--url", required=True)
     ap.add_argument("--token", default="")
     ap.add_argument("--llm-timeout", type=float, default=300.0)
+    ap.add_argument("--tps", type=float, default=0.0, help="set the replay rate before recording")
+    ap.add_argument("--scenario-tps", type=float, default=300.0, help="replay rate while scenarios run")
     args = ap.parse_args()
     url = args.url.rstrip("/")
+    import urllib.request  # noqa: PLC0415
+
+    def set_rate(tps: float) -> None:
+        req = urllib.request.Request(f"{url}/api/replay", method="POST",
+                                     data=json.dumps({"tps": tps, "paused": False}).encode(),
+                                     headers={"Content-Type": "application/json", "X-Demo-Token": args.token})
+        for attempt in range(5):  # the cloud network occasionally drops a connection
+            try:
+                print("replay:", urllib.request.urlopen(req, timeout=15).read().decode(), flush=True)
+                return
+            except OSError as e:
+                print("replay retry", attempt + 1, e, flush=True)
+                time.sleep(2)
+        raise SystemExit("could not set the replay rate")
+
+    if args.tps:
+        set_rate(args.tps)
     out = BUILD / "demo"
     out.mkdir(parents=True, exist_ok=True)
     marks: dict[str, list[float]] = {}
@@ -74,6 +93,8 @@ def main() -> None:
         marks["live"] = [s, now()]
         st = page.request.get(f"{url}/api/state").json()["metrics"]
         live.update(tps=st.get("tps", 0), p99=st.get("p99_ms", 0), p50=st.get("p50_ms", 0))
+        if args.tps:
+            set_rate(args.scenario_tps)  # give the on-box LLM the CPU while scenarios run
 
         # Mdm Tan
         spotlight(page, [".phonecol", ".casecol"])
@@ -127,6 +148,9 @@ def main() -> None:
         live.update(aisha=ca.get("decision"), aisha_ms=ca.get("latency_ms"))
 
         # platform proof panel
+        if args.tps:
+            set_rate(args.tps)
+            page.wait_for_timeout(12000)  # live metrics recover to the full replay rate
         spotlight(page, [])
         s = now()
         page.click("#proof-btn")

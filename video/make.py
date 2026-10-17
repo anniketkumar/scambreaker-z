@@ -73,6 +73,7 @@ def fill(text: str, live: dict, metrics: dict, nnpa: dict | None) -> str:
                 nnpa_text = "The behaviour model is scored on the Telum processor in micro-batches of transfers."
     vals = {
         "tps": words(live.get("tps", 0)), "p99": f"{live.get('p99', 0):.0f}",
+        "p50": f"{5 * round(live.get('p50', 0) / 5):.0f}",
         "tan_decision": {"BLOCK": "Blocked", "HOLD": "Held"}.get(live.get("tan_decision"), "Flagged"),
         "tan_ms": f"{live.get('tan_ms', 0):.0f}", "ravi_text": ravi_text, "aisha_text": aisha,
         "nnpa_text": nnpa_text,
@@ -208,6 +209,9 @@ def main() -> None:
                     clip_part(item[1], item[2], item[3], item[4], po)
                 pieces.append(po)
             concat(pieces, out)
+        elif ref == "live" and (BUILD / "live.webm").exists() and live.get("live_clip"):
+            s, e = live["live_clip"]  # re-shot once the replay covered most of a test day
+            clip_part(BUILD / "live.webm", s, e, d, out)
         else:
             s, e = marks[ref]
             clip_part(demo, s, e, d, out)

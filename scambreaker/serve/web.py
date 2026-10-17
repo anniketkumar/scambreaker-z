@@ -204,8 +204,9 @@ def _crypto_drivers() -> list[str]:
         txt = Path("/proc/crypto").read_text()
     except OSError:
         return []
-    return sorted({ln.split(":", 1)[1].strip() for ln in txt.splitlines()
-                   if ln.startswith("driver") and "s390" in ln})
+    drivers = {ln.split(":", 1)[1].strip() for ln in txt.splitlines() if ln.startswith("driver") and "s390" in ln}
+    first = [d for d in ("xts-aes-s390", "gcm-aes-s390", "sha256-s390", "sha512-s390") if d in drivers]
+    return first + sorted(drivers - set(first))
 
 
 def _cpu() -> dict:

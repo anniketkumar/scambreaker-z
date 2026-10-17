@@ -130,7 +130,9 @@ def nnpa(bench: dict, out: Path) -> None:
 
 
 def e2e(bench: dict, out: Path) -> None:
-    steps = bench.get("steps") or []
+    allsteps = bench.get("steps") or []
+    steps = [s for s in allsteps if s["p99_ms"] < 1000]  # unthrottled step saturates: queue grows
+    sat = [s for s in allsteps if s["p99_ms"] >= 1000]
     if not steps:
         return
     fig, ax = plt.subplots(figsize=(8.5, 4.6))
@@ -143,7 +145,8 @@ def e2e(bench: dict, out: Path) -> None:
     ax.set_xlabel("sustained throughput (tx/s, one scorer)")
     ax.set_ylabel("p99 latency, bus → decision (ms)")
     ax.set_ylim(0, max(y) * 1.35)
-    _title(ax, "End-to-end: throughput vs tail latency", "live stack on LinuxONE · replay rate stepped up every 35 s")
+    note = f" · saturates near {sat[0]['achieved_tps']:,.0f} tx/s" if sat else ""
+    _title(ax, "End-to-end: throughput vs tail latency", f"live stack on IBM z17, one scorer process{note}")
     fig.tight_layout()
     fig.savefig(out / "e2e.png", dpi=160)
     plt.close(fig)

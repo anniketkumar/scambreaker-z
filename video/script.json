@@ -25,7 +25,7 @@
       "id": "demo_live",
       "visual": "clip:live",
       "min_s": 3,
-      "say": "Here it is, live on our LinuxONE server, scoring IBM's AMLworld transactions at {tps} per second, with a p99 decision latency of {p99} milliseconds."
+      "say": "Here it is, live on our LinuxONE server, scoring IBM's AMLworld transactions at {tps} per second, with a median decision latency of about {p50} milliseconds."
     },
     {
       "id": "demo_tan",
