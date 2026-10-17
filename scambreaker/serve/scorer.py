@@ -233,7 +233,7 @@ def run(argv: list[str] | None = None) -> None:
                            "scores": {"A": round(pa, 4), "B": round(float(out["p_b"][i]), 4),
                                       "C": round(float(out["p_c"][i]), 4)},
                            "pool": is_pool, "aml": bool(aml), "latency_ms": round(latency, 2),
-                           "truth": truth, "scenario": scenario, "step": m.get("step")}
+                           "truth": truth, "scenario": scenario, "step": m.get("step"), "steps": m.get("steps")}
                     if d >= 2 or scenario:
                         rec.update(sc.explain(m, i, out))
                         rec["case"] = True

@@ -1,0 +1,29 @@
+{
+  "voice": "en-SG-LunaNeural",
+  "rate": "+6%",
+  "max_seconds": 175,
+  "segments": [
+    {"id": "hook", "visual": "slide:hook", "min_s": 4,
+     "say": "Last year, people in Singapore lost nine hundred and thirteen million dollars to scams. In four out of five cases, nobody hacks anything. A scammer talks the victim into pressing send."},
+    {"id": "problem", "visual": "slide:problem", "min_s": 4,
+     "say": "That is why bank fraud models miss them. They are built to catch stolen cards and passwords, but here the real customer is paying. Police can now freeze a victim's accounts, but only as a last resort: just twelve orders so far. Banks said anything finer-grained would need significant system changes."},
+    {"id": "solution", "visual": "slide:solution", "min_s": 4,
+     "say": "ScamBreaker-Z makes that change inside the payment itself, on IBM LinuxONE. Three models score every transfer in milliseconds: the payee's mule risk, this customer's normal behaviour, and signs of coercion in the session. The response is proportionate: allow, nudge, a twenty-four-hour hold, or block."},
+    {"id": "demo_live", "visual": "clip:live", "min_s": 3,
+     "say": "Here it is, live on our LinuxONE server, scoring IBM's AMLworld transactions at {tps} per second, with a p99 decision latency of {p99} milliseconds."},
+    {"id": "demo_tan", "visual": "clip:tan", "min_s": 3,
+     "say": "Mrs Tan is seventy-two. A caller posing as a government officer tells her to move eighteen thousand five hundred dollars to a safe account. {tan_decision} in {tan_ms} milliseconds. IBM Granite, running on the same server, explains why in English and in Chinese, and alerts her daughter."},
+    {"id": "demo_case", "visual": "clip:case", "min_s": 3,
+     "say": "The analyst sees every reason, which model raised it, and a case summary grounded in our policy documents."},
+    {"id": "demo_ravi", "visual": "clip:ravi", "min_s": 3,
+     "say": "Ravi's crypto investment escalates with every payment. {ravi_text}"},
+    {"id": "demo_aisha", "visual": "clip:aisha", "min_s": 3,
+     "say": "And Aisha's genuine tuition payment {aisha_text}."},
+    {"id": "platform", "visual": "clip:platform", "min_s": 4,
+     "say": "Everything runs in containers on IBM LinuxONE. {nnpa_text} Granite runs on the box, on a network with no route to the internet, so customer data never leaves. Data at rest is encrypted by the CPACF crypto unit, and every decision is written to a tamper-evident hash chain."},
+    {"id": "results", "visual": "slide:results", "min_s": 4,
+     "say": "On held-out test days, ScamBreaker-Z held {scam_usd} percent of scam money while holding only {legit_hold} percent of legitimate payments. No single model comes close on its own."},
+    {"id": "close", "visual": "slide:close", "min_s": 4,
+     "say": "Detect, decide, respond: inside the transaction. ScamBreaker-Z."}
+  ]
+}
