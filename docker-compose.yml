@@ -40,15 +40,26 @@ services:
       SB_BUS: redis://redis:6379/0
     depends_on: [redis, scorer]
 
+  llm:
+    image: scambreaker-llm:latest
+    build: ./llm
+    user: "1000:1000"
+    command: ["-m", "/models/${LLM_MODEL:-granite-3.3-2b-instruct-be.Q4_K_M.gguf}", "-c", "4096", "-t", "${LLM_THREADS:-3}",
+              "--host", "0.0.0.0", "--port", "8081", "--parallel", "1"]
+    volumes:
+      - /secure/work/llm:/models:ro
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    restart: unless-stopped
+    networks: [core]
+
   genai:
     <<: *app
     command: ["python", "-m", "scambreaker.serve.genai"]
     environment:
       SB_BUS: redis://redis:6379/0
-      SB_LLM_PATH: ${SB_LLM_PATH:-/secure/work/llm/granite.gguf}
-      SB_LLM_GPU_LAYERS: ${SB_LLM_GPU_LAYERS:--1}
-      SB_LLM_THREADS: ${SB_LLM_THREADS:-4}
-    depends_on: [redis]
+      SB_LLM_URL: http://llm:8081
+    depends_on: [redis, llm]
 
   web:
     <<: *app

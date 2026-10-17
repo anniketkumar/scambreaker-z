@@ -43,7 +43,7 @@
       "id": "demo_ravi",
       "visual": "clip:ravi",
       "min_s": 3,
-      "say": "Ravi's crypto investment escalates with every payment. {ravi_text}"
+      "say": "Ravi has been lured into a crypto investment that keeps asking for bigger top-ups. {ravi_text}"
     },
     {
       "id": "demo_aisha",

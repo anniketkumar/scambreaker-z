@@ -8,6 +8,7 @@ decisions, opens cases for held payments and queues them for the GenAI worker.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import platform
@@ -31,7 +32,7 @@ from .bus import make_bus
 
 DECISIONS = config.DECISIONS
 UI_ALLOW_PER_SEC = 12
-GENAI_REPLAY_EVERY_S = 25.0
+GENAI_REPLAY_EVERY_S = 300.0  # keep the on-box LLM free for live cases
 C_ORDER = coercion_lr.FEATURES
 
 
@@ -65,6 +66,7 @@ class Scorer:
         self.tok = Tokenizer()
         self.engine = FeatureEngine()
         self.now_t = 0
+        self.persona_snap: dict = {}
         self.load_s = time.time() - t0
 
     # ----------------------------------------------------------- warm-up
@@ -81,6 +83,8 @@ class Scorer:
             for t, s, d, a, f, sb, cc, h in zip(*cols):
                 proc(t, s, d, a, f, sb, cc, h, want_a=False, want_seq=False)
         self.now_t = start * 1440
+        # demo personas start every scenario run from the same history (repeatable demos)
+        self.persona_snap = {pid: copy.deepcopy(self.engine.acc[pid]) for pid in self.personas if pid in self.engine.acc}
         return time.time() - t0
 
     # ------------------------------------------------------------- score
@@ -96,6 +100,8 @@ class Scorer:
             t = m.get("t")
             if t is None:  # live scenario event: stamp with the replay clock
                 t = self.now_t + int(m.get("offset_min", 0))
+                if m.get("step") == 1 and m["src"] in self.persona_snap:
+                    self.engine.acc[m["src"]] = copy.deepcopy(self.persona_snap[m["src"]])
             elif t > self.now_t:
                 self.now_t = t
             fmt = m["fmt"] if isinstance(m["fmt"], int) else FMT_CODE[m["fmt"]]
@@ -160,13 +166,14 @@ def run(argv: list[str] | None = None) -> None:
     args = ap.parse_args(argv)
 
     bus = make_bus()
-    consumer = socket.gethostname()
+    consumer = os.environ.get("SB_CONSUMER", "scorer-main")
     sc = Scorer(args.models, args.data, device=args.device)
-    proof = {"service": "scorer", "host": consumer, "machine": platform.machine(), "device": args.device,
+    proof = {"service": "scorer", "host": socket.gethostname(), "machine": platform.machine(), "device": args.device,
              "status": "warming", "started": time.time()}
     bus.set("proof:scorer", proof)
     warm_s = sc.warm_up()
-    proof.update(status="ready", warm_up_s=round(warm_s, 1), accounts=len(sc.engine.acc), **accel_probe(sc))
+    proof.update(status="ready", ready_at=time.time(), warm_up_s=round(warm_s, 1), accounts=len(sc.engine.acc),
+                 **accel_probe(sc))
     bus.set("proof:scorer", proof)
     print(f"scorer ready: warm-up {warm_s:.1f}s, {len(sc.engine.acc):,} accounts, {proof.get('tf_devices')}", flush=True)
 
@@ -181,7 +188,11 @@ def run(argv: list[str] | None = None) -> None:
     last_metrics, last_genai = 0.0, 0.0
 
     while True:
-        items = bus.xreadgroup("tx.in", "scorers", consumer, count=args.batch, block_ms=50)
+        stream = "tx.priority"
+        items = bus.xreadgroup(stream, "scorers", consumer, count=64, block_ms=1)
+        if not items:
+            stream = "tx.in"
+            items = bus.xreadgroup(stream, "scorers", consumer, count=args.batch, block_ms=50)
         now = time.time()
         if items:
             ids = [sid for sid, _ in items]
@@ -191,7 +202,7 @@ def run(argv: list[str] | None = None) -> None:
                     proof["status"] = "warming"
                     bus.set("proof:scorer", proof)
                     sc.warm_up()
-                    proof["status"] = "ready"
+                    proof.update(status="ready", ready_at=time.time())
                     bus.set("proof:scorer", proof)
                     continue
                 msgs.append(m)
@@ -244,7 +255,8 @@ def run(argv: list[str] | None = None) -> None:
                         bus.push_recent("cases:recent", {k: rec[k] for k in ("id", "sim", "decision", "amount_usd",
                                                                               "typology_label", "customer", "scenario", "persona")})
                         if rec["llm"]["status"] == "queued":
-                            bus.xadd("genai.jobs", {"case_id": rec["id"]})
+                            bus.xadd("genai.priority" if scenario else "genai.jobs",
+                                     {"case_id": rec["id"], "queued": done})
                             if not scenario:
                                 last_genai = now
                     if d >= 1 or scenario or (aml and is_pool) or np.random.random() < 0.01:
@@ -261,7 +273,7 @@ def run(argv: list[str] | None = None) -> None:
                         pubs.append(rec)
                 if pubs:
                     bus.xadd_many("decisions", pubs)
-            bus.xack("tx.in", "scorers", ids)
+            bus.xack(stream, "scorers", ids)
         if now - last_metrics >= 1.0:
             last_metrics = now
             recent = [s for s in stamps if s >= now - 5.0]

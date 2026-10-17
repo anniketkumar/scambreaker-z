@@ -13,9 +13,12 @@ from pathlib import Path
 import numpy as np
 
 from .. import config
-from ..features.engine import N_SEQ
+from ..features.engine import N_SEQ, SEQ_FEATURES
 
 UNITS = 48
+# Hour of day is excluded: AMLworld spreads activity evenly over 24h while injected episodes
+# follow typology-specific hours, so the hour would be a simulation artifact, not a signal.
+EXCLUDED = [SEQ_FEATURES.index("hour_sin"), SEQ_FEATURES.index("hour_cos")]
 BATCH_BUCKETS = (1, 8, 32, 128, 512, 2048)
 
 
@@ -57,6 +60,7 @@ def norm_stats(seq: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 def normalize(seq: np.ndarray, mu: np.ndarray, sd: np.ndarray) -> np.ndarray:
     out = ((seq - mu) / sd).astype(np.float32)
     out[seq[:, :, 0] < 0.5] = 0.0  # padded steps stay exactly zero
+    out[:, :, EXCLUDED] = 0.0
     return out
 
 

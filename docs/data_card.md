@@ -26,7 +26,7 @@ Banks do not publish victim-side scam data, so APP-scam episodes are simulated a
 
   | Typology | Payments | Amounts (× victim's usual payment) | Gaps | Rails |
   |---|---|---|---|---|
-  | Government official impersonation | 1–3 | ~8× | 5–90 min | ACH / Wire |
+  | Government official impersonation | 1–3 | ~25× (savings drained) | 5–90 min | ACH / Wire |
   | Investment | 3–8 | escalating ×1.3–2.2 | 2–24 h | Bitcoin / ACH / Wire |
   | Job / task | 4–12 | small, escalating ×1.2–1.8 | 10–120 min | ACH |
   | Fake friend / romance | 1–4 | ~3× | 1–24 h | ACH / Wire |
@@ -43,5 +43,5 @@ Every injected row carries `kind != 0`. Every scam metric is reported as "on sim
 - Coercion-signal distributions are assumptions informed by public scam advisories, not measured bank telemetry. A bank would refit them on its own data; the architecture does not change.
 - AMLworld is itself simulated, although it is a published benchmark built to be realistic.
 - The test period is two days. Results are a credible signal, not a production estimate.
-- **Hour of day:** AMLworld spreads activity evenly over 24 hours, while injected episodes follow typology-specific hours (more evening activity). The distributions overlap heavily, but this is a mild simulation difference the behaviour model can see.
+- **Hour of day:** AMLworld spreads activity evenly over 24 hours, while injected episodes follow typology-specific hours. Because that difference is a simulation artifact rather than a real signal, hour-of-day inputs are **zeroed for the behaviour model and dropped from the typology model**. Only the payee model, trained purely on real AMLworld data, sees the hour.
 - **Leakage check performed:** a first training run let scam Bitcoin payments be cross-currency while every real AMLworld Bitcoin transfer is same-currency, a synthetic fingerprint. Injected payments now take the cross-currency rate observed in the real data for that rail, and all reported numbers come from the corrected run.

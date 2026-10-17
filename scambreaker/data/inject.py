@@ -37,7 +37,8 @@ SESSION = {
 # victim's usual payment). gap = minutes between payments; p_new = chance a follow-up payment
 # goes to a new mule; hours = local hours the episode starts in.
 EPISODE = {
-    "gov_impersonation": dict(n=(1, 3), amount=("flat", 8.0, 0.6), gap=(5, 90), p_new=0.4,
+    # impersonation victims are told to move their savings: far larger than any usual payment
+    "gov_impersonation": dict(n=(1, 3), amount=("flat", 25.0, 0.8), gap=(5, 90), p_new=0.4,
                               fmts={"ACH": 0.6, "Wire": 0.4}, hours=(9, 17)),
     "investment": dict(n=(3, 8), amount=("escalate", (0.3, 1.0), (1.3, 2.2)), gap=(120, 1440),
                        p_new=0.25, fmts={"Bitcoin": 0.4, "ACH": 0.4, "Wire": 0.2}, hours=(10, 22)),

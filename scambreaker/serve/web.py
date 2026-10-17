@@ -156,7 +156,20 @@ def scenario(slug: str):
     def send():
         for m in msgs:
             m["ingest_ts"] = time.time()
-            bus.xadd("tx.in", m)
+            bus.xadd("tx.priority", m)  # live scenarios jump the replay queue
+            decision = None
+            for _ in range(30):  # wait for the scorer's decision on this payment
+                c = bus.get(f"case:{m['id']}")
+                if c:
+                    decision = c.get("decision")
+                    break
+                time.sleep(0.1)
+            if decision in ("HOLD", "BLOCK") and m["step"] < m["steps"]:
+                # a held/blocked payment never reaches the scammer; the bank calls the customer,
+                # so the rest of the episode is prevented
+                bus.xadd("ui.events", {"type": "episode_stopped", "id": m["id"], "scenario": slug,
+                                       "at_step": m["step"], "of": m["steps"]})
+                return
             time.sleep(gap)
 
     threading.Thread(target=send, daemon=True).start()

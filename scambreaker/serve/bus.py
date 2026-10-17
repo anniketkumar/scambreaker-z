@@ -13,7 +13,7 @@ import threading
 import time
 from collections import deque
 
-STREAM_MAXLEN = 20_000
+STREAM_MAXLEN = 200_000
 
 
 def _dumps(obj) -> str:

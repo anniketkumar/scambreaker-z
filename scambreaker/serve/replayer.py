@@ -47,8 +47,12 @@ def run(argv: list[str] | None = None) -> None:
     start = int(np.searchsorted(ev["day"], config.TEST_DAYS[0], side="left"))
     n = len(ev) - start
     bus.set("replay:control", bus.get("replay:control") or {"tps": args.tps, "paused": False})
-    # wait for the scorer to finish warming up so latency numbers are meaningful
-    while (bus.get("proof:scorer") or {}).get("status") != "ready":
+    # wait for a scorer that became ready *after* we started (ignore a stale flag from a previous run)
+    started = time.time()
+    while True:
+        p = bus.get("proof:scorer") or {}
+        if p.get("status") == "ready" and p.get("ready_at", 0) >= started - 5:
+            break
         time.sleep(1.0)
     loop_no = 0
     while True:
@@ -77,9 +81,12 @@ def run(argv: list[str] | None = None) -> None:
                                        "ts": time.time()})
         if not args.loop:
             break
+        reset_at = time.time()
         bus.xadd("tx.in", {"ctl": "reset"})
-        time.sleep(3)
-        while (bus.get("proof:scorer") or {}).get("status") != "ready":
+        while True:
+            p = bus.get("proof:scorer") or {}
+            if p.get("status") == "ready" and p.get("ready_at", 0) >= reset_at:
+                break
             time.sleep(1.0)
 
 

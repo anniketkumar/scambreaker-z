@@ -45,7 +45,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", required=True)
     ap.add_argument("--token", default="")
-    ap.add_argument("--llm-timeout", type=float, default=150.0)
+    ap.add_argument("--llm-timeout", type=float, default=300.0)
     args = ap.parse_args()
     url = args.url.rstrip("/")
     out = BUILD / "demo"
@@ -106,8 +106,12 @@ def main() -> None:
         spotlight(page, [".feed", ".phonecol"])
         s = now()
         ravi_ids = run_scenario(page, url, "ravi_invest")
-        page.wait_for_function("() => [...document.querySelectorAll('#phone .meta')].some(e => e.textContent.includes('payment 4 of 4'))",
-                               timeout=60000)
+        page.wait_for_function("""() => {
+            const who = document.querySelector('#phone-who');
+            if (!who || !who.textContent.includes('Ravi')) return false;
+            const meta = document.querySelector('#phone .meta');
+            return (meta && (meta.textContent.includes('payment 4 of 4') || meta.textContent.includes('prevented')));
+        }""", timeout=90000)
         page.wait_for_timeout(2500)
         marks["ravi"] = [s, now()]
         live["ravi"] = [case(page, url, i).get("decision") for i in ravi_ids]

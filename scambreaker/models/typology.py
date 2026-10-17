@@ -12,7 +12,7 @@ from .. import config
 from ..features.engine import SEQ_FEATURES
 
 _CUR = {name: i for i, name in enumerate(SEQ_FEATURES)}
-STEP_COLS = ("amt_log", "amt_ratio_log", "new_payee", "since_prev_log", "hour_sin", "hour_cos",
+STEP_COLS = ("amt_log", "amt_ratio_log", "new_payee", "since_prev_log",  # no hour of day (simulation artifact)
              "fmt_ACH", "fmt_Bitcoin", "fmt_Wire", "cross_bank", "cross_cur", "same_payee_prev",
              "escalation_log")
 

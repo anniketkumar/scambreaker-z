@@ -49,7 +49,8 @@ def fill(text: str, live: dict, metrics: dict, nnpa: dict | None) -> str:
     if first is None:
         ravi_text = "Each payment gets a nudge, and the pattern goes to an analyst."
     elif first == 0:
-        ravi_text = f"It is {'held' if ravi[0] == 'HOLD' else 'blocked'} from the very first payment."
+        ravi_text = (f"ScamBreaker-Z {'holds' if ravi[0] == 'HOLD' else 'blocks'} the very first payment, "
+                     "so the escalation never happens.")
     else:
         soft = "a gentle nudge" if any(d == "NUDGE" for d in ravi[:first]) else "no friction"
         n = {1: "first payment goes", 2: "first two payments go", 3: "first three payments go"}[first]

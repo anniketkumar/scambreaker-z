@@ -21,6 +21,10 @@
       if (msg.type === "decision") onDecision(msg.d);
       else if (msg.type === "metrics") onMetrics(msg.m);
       else if (msg.type === "llm") onLLM(msg);
+      else if (msg.type === "episode_stopped") {
+        const c = state.cases.get(msg.id);
+        if (c) { c.stopped = true; if (state.selected === msg.id) state.dirtySel = true; }
+      }
     };
     es.onerror = () => { $("#feed-note").textContent = "reconnecting…"; };
     es.onopen = () => { $("#feed-note").textContent = "IBM AMLworld test days, replayed"; };
@@ -98,7 +102,9 @@
     const contact = (c.contact || "").split(" (")[0];
     return String(text || "")
       .replace(/[{[<]\s*NAME\s*[}\]>]/g, c.customer || "Customer")
-      .replace(/[{[<]\s*CONTACT\s*[}\]>]/g, contact || "your contact");
+      .replace(/[{[<]\s*CONTACT\s*[}\]>]/g, contact || "your contact")
+      .replace(/[{[<]\s*PAYEE\s*[}\]>]/g, c.payee_label || "this payee")
+      .replace(/\{[A-Z_]{2,}\}/g, "");
   }
 
   function msgBlock(c, field, cls) {
@@ -131,7 +137,7 @@
       <div class="xfer"><div class="to">Transfer to</div>
         <div class="payee">${esc(c.payee_label)}${newPayee ? '<span class="tagnew">NEW PAYEE</span>' : ""}</div>
         <div class="amt">${money(c.amount_usd)}</div>
-        <div class="meta">${esc(c.fmt)}${c.steps > 1 ? ` · payment ${c.step} of ${c.steps}` : ""}</div></div>
+        <div class="meta">${esc(c.fmt)}${c.steps > 1 ? ` · payment ${c.step} of ${c.steps}` : ""}${c.stopped ? " · later payments prevented" : ""}</div></div>
       <div class="msgs"><div class="banner ${c.decision}">${banner}</div>${body}</div>
       <div class="actions">${actions}</div>`;
     $("#phone-who").textContent = c.customer ? `${c.customer}${c.scenario ? " · scenario" : ""}` : "";
