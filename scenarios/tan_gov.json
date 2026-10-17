@@ -1,0 +1,15 @@
+{
+  "slug": "tan_gov",
+  "persona": "tan",
+  "title": "Mdm Tan, 72 - caller claims to be a government officer",
+  "story": "A caller says her bank account is linked to a crime and tells her to move her savings to a 'safe account' while staying on the line.",
+  "payee_ref": "tan",
+  "payee_name": "LIM WEI JIE",
+  "truth_is_scam": 1,
+  "typology": "gov_impersonation",
+  "steps": [
+    {"offset_min": 0, "amount_sgd": 18500, "fmt": "ACH",
+     "session": {"on_call": 1, "unknown_caller": 1, "remote_access": 0, "payee_added_min": 3,
+                 "session_s": 540, "hesitation": 1.6, "failed": 1, "new_device": 0}}
+  ]
+}

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+work/
+.env
+*.pem
+*.gguf
+*.npy
+video/build/
+video/out/
+.pytest_cache/

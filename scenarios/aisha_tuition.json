@@ -1,0 +1,15 @@
+{
+  "slug": "aisha_tuition",
+  "persona": "aisha",
+  "title": "Aisha, 45 - university fees (legitimate)",
+  "story": "Aisha pays her son's semester fees to the university bursar account she added two days ago.",
+  "payee_ref": "aisha",
+  "payee_name": "DEMO UNIVERSITY BURSAR",
+  "truth_is_scam": 0,
+  "typology": null,
+  "steps": [
+    {"offset_min": 0, "amount_sgd": 9800, "fmt": "ACH",
+     "session": {"on_call": 0, "unknown_caller": 0, "remote_access": 0, "payee_added_min": 2880,
+                 "session_s": 180, "hesitation": 0.1, "failed": 0, "new_device": 0}}
+  ]
+}

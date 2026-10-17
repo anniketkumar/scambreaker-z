@@ -1,0 +1,24 @@
+{
+  "slug": "ravi_invest",
+  "persona": "ravi",
+  "title": "Ravi, 34 - 'AlphaYield' crypto investment",
+  "story": "An online 'mentor' shows Ravi fake profits and asks him to top up his trading account again and again.",
+  "payee_ref": "ravi",
+  "payee_name": "ALPHAYIELD CAPITAL",
+  "truth_is_scam": 1,
+  "typology": "investment",
+  "steps": [
+    {"offset_min": 0, "amount_sgd": 500, "fmt": "Bitcoin",
+     "session": {"on_call": 0, "unknown_caller": 0, "remote_access": 0, "payee_added_min": 35,
+                 "session_s": 210, "hesitation": 0.3, "failed": 0, "new_device": 0}},
+    {"offset_min": 300, "amount_sgd": 1200, "fmt": "Bitcoin",
+     "session": {"on_call": 0, "unknown_caller": 0, "remote_access": 0, "payee_added_min": 335,
+                 "session_s": 190, "hesitation": 0.4, "failed": 0, "new_device": 0}},
+    {"offset_min": 720, "amount_sgd": 3000, "fmt": "Bitcoin",
+     "session": {"on_call": 0, "unknown_caller": 0, "remote_access": 0, "payee_added_min": 755,
+                 "session_s": 260, "hesitation": 0.6, "failed": 1, "new_device": 0}},
+    {"offset_min": 1200, "amount_sgd": 8000, "fmt": "Bitcoin",
+     "session": {"on_call": 1, "unknown_caller": 1, "remote_access": 0, "payee_added_min": 1235,
+                 "session_s": 420, "hesitation": 1.0, "failed": 1, "new_device": 0}}
+  ]
+}

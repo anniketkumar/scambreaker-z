@@ -1,0 +1,67 @@
+# ScamBreaker-Z on IBM LinuxONE. All state lives on /secure (LUKS2, AES-XTS via CPACF).
+# Only the web console is published; the AI services sit on an internal network with no
+# route to the internet, so no transaction data or prompt can leave the box.
+name: scambreaker
+
+x-app: &app
+  image: scambreaker-z:latest
+  build: .
+  user: "1000:1000"
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  restart: unless-stopped
+  volumes:
+    - /secure/work:/secure/work
+  networks: [core]
+
+services:
+  redis:
+    image: ${REDIS_IMAGE:-redis:7.2-alpine}
+    user: "999:999"
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "768mb",
+              "--maxmemory-policy", "allkeys-lru", "--protected-mode", "no"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    restart: unless-stopped
+    networks: [core]
+
+  scorer:
+    <<: *app
+    command: ["python", "-m", "scambreaker.serve.scorer"]
+    environment:
+      SB_BUS: redis://redis:6379/0
+      SB_DEVICE: ${SB_DEVICE:-auto}
+    depends_on: [redis]
+
+  replayer:
+    <<: *app
+    command: ["python", "-m", "scambreaker.serve.replayer", "--tps", "${REPLAY_TPS:-1500}", "--loop"]
+    environment:
+      SB_BUS: redis://redis:6379/0
+    depends_on: [redis, scorer]
+
+  genai:
+    <<: *app
+    command: ["python", "-m", "scambreaker.serve.genai"]
+    environment:
+      SB_BUS: redis://redis:6379/0
+      SB_LLM_PATH: ${SB_LLM_PATH:-/secure/work/llm/granite.gguf}
+      SB_LLM_GPU_LAYERS: ${SB_LLM_GPU_LAYERS:--1}
+      SB_LLM_THREADS: ${SB_LLM_THREADS:-4}
+    depends_on: [redis]
+
+  web:
+    <<: *app
+    command: ["gunicorn", "-k", "gthread", "--threads", "48", "-w", "1", "--timeout", "0",
+              "-b", "0.0.0.0:8080", "scambreaker.serve.web:app"]
+    environment:
+      SB_BUS: redis://redis:6379/0
+      SB_DEMO_TOKEN: ${SB_DEMO_TOKEN:-}
+    ports: ["8080:8080"]
+    networks: [core, edge]
+    depends_on: [redis]
+
+networks:
+  core:
+    internal: true
+  edge: {}

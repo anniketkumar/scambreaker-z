@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ product }} · Live console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M11 16.5 14.5 20 21.5 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>
+      <div class="name">{{ product }}</div>
+      <div class="tag">Detect · Decide · Respond — inside the transaction</div>
+    </div>
+  </div>
+  <div class="badges" id="badges">
+    <span class="badge" data-k="arch">s390x</span>
+    <span class="badge" data-k="nnpa">Telum NNPA</span>
+    <span class="badge" data-k="llm">Granite on-box</span>
+    <span class="badge" data-k="luks">LUKS2 · CPACF</span>
+  </div>
+  <div class="clock"><span class="muted">Replay clock</span> <b id="simclock">–</b></div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><div class="k">Throughput</div><div class="v"><span id="k-tps">–</span><small> tx/s</small></div><div class="s" id="k-events">–</div></div>
+  <div class="kpi"><div class="k">Decision latency</div><div class="v"><span id="k-p50">–</span><small> ms p50</small></div><div class="s">p99 <b id="k-p99">–</b> ms · bus → decision</div></div>
+  <div class="kpi"><div class="k">Friction ladder</div><div class="v ladder"><span class="chip ALLOW" id="k-allow">–</span><span class="chip NUDGE" id="k-nudge">–</span><span class="chip HOLD" id="k-hold">–</span><span class="chip BLOCK" id="k-block">–</span></div><div class="s">allow · nudge · hold · block</div></div>
+  <div class="kpi accent"><div class="k">Scam money paused</div><div class="v"><span id="k-scam">–</span></div><div class="s" id="k-scam-s">simulated scam payments in replay</div></div>
+  <div class="kpi"><div class="k">Legit payments held</div><div class="v"><span id="k-legit">–</span></div><div class="s">budget ≤ 0.2%</div></div>
+  <div class="kpi"><div class="k">Audit chain</div><div class="v"><span id="k-audit">–</span><small> records</small></div><div class="s">SHA-256 hash-chained</div></div>
+</section>
+
+<main class="grid">
+  <section class="panel feed">
+    <div class="ph"><h2>Live decisions</h2><span class="muted" id="feed-note">IBM AMLworld test days, replayed</span></div>
+    <table class="tbl">
+      <thead><tr><th>Clock</th><th class="r">Amount</th><th>Rail</th><th>A payee</th><th>B behaviour</th><th>C coercion</th><th class="r">Score</th><th>Decision</th><th class="r">ms</th></tr></thead>
+      <tbody id="feed"></tbody>
+    </table>
+    <div class="chartwrap"><canvas id="latchart"></canvas></div>
+  </section>
+
+  <section class="panel phonecol">
+    <div class="ph"><h2>Customer's phone</h2><span class="muted" id="phone-who">select a case</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen" id="phone">
+        <div class="appbar"><span>{{ bank }}</span><span class="muted" id="phone-time"></span></div>
+        <div class="empty">Run a scenario below to see what the customer sees.</div>
+      </div>
+    </div>
+    <div class="sms">
+      <div class="ph small"><h3>Trusted contact</h3><span class="muted" id="sms-who"></span></div>
+      <div class="bubble" id="sms"><span class="muted">Alerts to a pre-registered family member appear here.</span></div>
+    </div>
+  </section>
+
+  <section class="panel casecol">
+    <div class="ph"><h2>Analyst case file</h2><span class="muted" id="case-id"></span></div>
+    <div class="queue" id="queue"></div>
+    <div id="case" class="case"><div class="empty">Held payments open a case here, with the evidence behind the decision.</div></div>
+  </section>
+</main>
+
+<footer class="bar">
+  <div class="group">
+    <span class="lbl">Scenarios</span>
+    {% for s in scenarios %}
+    <button class="btn scen" data-slug="{{ s.slug }}" title="{{ s.story }}">▶ {{ s.title }}</button>
+    {% endfor %}
+  </div>
+  <div class="group">
+    <span class="lbl">Replay</span>
+    <button class="btn ghost" data-replay="pause">Pause</button>
+    <button class="btn ghost" data-replay="1000">1k/s</button>
+    <button class="btn ghost" data-replay="3000">3k/s</button>
+    <button class="btn ghost" data-replay="0">Max</button>
+    <button class="btn proof" id="proof-btn">Platform proof</button>
+  </div>
+</footer>
+
+<div class="modal" id="proof-modal" hidden>
+  <div class="sheet">
+    <div class="ph"><h2>Platform proof · measured live on this machine</h2><button class="btn ghost" id="proof-close">Close</button></div>
+    <div id="proof-body" class="proofgrid"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
+<script>window.SB = {tokenRequired: {{ 'true' if token_required else 'false' }}, personas: {{ personas | tojson }}, sgdPerUsd: {{ sgd_per_usd }}};</script>
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
