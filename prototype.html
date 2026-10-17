@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="ScamBreaker-Z by Team Swaggers: real-time scam interception on IBM LinuxONE. Interactive prototype.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z' fill='%231d5fd1'/%3E%3Cpath d='M11 16.5 14.5 20 21.5 12' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ScamBreaker-Z Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: an operations console. Controls on the left, the decision and its three audiences on the right,
+   then the evidence (guardrails, audit chain, measured results, architecture) in full-width bands. */
+:root{
+  --bg:#eef2f5; --surface:#ffffff; --sunk:#f5f7f9; --ink:#14202b; --ink2:#3b4a57; --muted:#647584; --line:#d6dee5;
+  --accent:#1d5fd1; --accent-ink:#ffffff; --accent-soft:#e3ecfb;
+  --allow:#1d7f52; --nudge:#a86a0c; --hold:#c75a10; --block:#bf2a2a;
+  --allow-soft:#e2f3ea; --nudge-soft:#fbf0db; --hold-soft:#fde8da; --block-soft:#fbe2e2;
+  --s1:#1d5fd1; --s2:#c8691b;
+  --phone:#0f1720; --phone-ink:#eef3f7; --phone-card:#1b2632;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --f-zh:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d131a; --surface:#151d26; --sunk:#111821; --ink:#e6edf3; --ink2:#c2cdd7; --muted:#8fa1b1; --line:#26333f;
+  --accent:#5a8cf0; --accent-ink:#0d131a; --accent-soft:#1a2a45;
+  --allow:#4cbb85; --nudge:#e0a43c; --hold:#ee8a4a; --block:#ef6464;
+  --allow-soft:#123222; --nudge-soft:#33270f; --hold-soft:#3a2312; --block-soft:#3a1717;
+  --s1:#5a8cf0; --s2:#c97834;
+  --phone:#06090d; --phone-ink:#eef3f7; --phone-card:#18222d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d131a; --surface:#151d26; --sunk:#111821; --ink:#e6edf3; --ink2:#c2cdd7; --muted:#8fa1b1; --line:#26333f;
+  --accent:#5a8cf0; --accent-ink:#0d131a; --accent-soft:#1a2a45;
+  --allow:#4cbb85; --nudge:#e0a43c; --hold:#ee8a4a; --block:#ef6464;
+  --allow-soft:#123222; --nudge-soft:#33270f; --hold-soft:#3a2312; --block-soft:#3a1717;
+  --s1:#5a8cf0; --s2:#c97834;
+  --phone:#06090d; --phone-ink:#eef3f7; --phone-card:#18222d; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1280px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.005em}
+h2{font-size:22px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between;padding-block:28px 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:14px;align-items:center}
+.brand svg{width:40px;height:40px;color:var(--accent);flex:none}
+.brand h1{font-size:30px;font-weight:700;line-height:1.05}
+.brand .tag{color:var(--ink2);font-size:14px}
+.facts{display:flex;flex-wrap:wrap;gap:6px}
+.fact{font-family:var(--f-mono);font-size:11.5px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink2)}
+.notice{margin-block:14px 22px;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);color:var(--ink);font-size:13.5px}
+.notice b{font-weight:600}
+.notice svg{flex:none;width:18px;height:18px;margin-top:2px;color:var(--accent)}
+
+/* main console */
+.console{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:980px){.console{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.panel>.ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+
+.scen{display:grid;gap:8px}
+.scen button{all:unset;cursor:pointer;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.scen button:hover{border-color:var(--accent)}
+.scen button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.scen button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.scen .t{font-weight:600}
+.scen .d{font-size:12.5px;color:var(--muted)}
+.scen .truth{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+
+fieldset{border:0;padding:0;margin:14px 0 0;display:grid;gap:8px;min-width:0}
+legend{padding:0;margin-bottom:6px}
+.row{display:grid;grid-template-columns:1fr 132px;gap:8px;align-items:center}
+.row label{color:var(--ink2);font-size:13px}
+.row input[type=number],.row select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);font-family:var(--f-mono);font-size:13px}
+.row input[type=range]{width:100%;accent-color:var(--accent)}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);font-size:13px;cursor:pointer}
+.chk input{accent-color:var(--accent);margin:0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:9px 14px;border-radius:8px;font-weight:600}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* decision */
+.right{display:grid;gap:18px;min-width:0}
+.decision{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px}
+@media (max-width:760px){.decision{grid-template-columns:minmax(0,1fr)}}
+.verdict{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.chip{font-family:var(--f-mono);font-weight:500;font-size:12px;letter-spacing:.06em;padding:3px 8px;border-radius:5px;border:1px solid currentColor;display:inline-flex;gap:6px;align-items:center}
+.chip.ALLOW{color:var(--allow);background:var(--allow-soft)}
+.chip.NUDGE{color:var(--nudge);background:var(--nudge-soft)}
+.chip.HOLD{color:var(--hold);background:var(--hold-soft)}
+.chip.BLOCK{color:var(--block);background:var(--block-soft)}
+.big{font-family:var(--f-display);font-size:40px;font-weight:700;line-height:1;padding:8px 14px;border-radius:8px}
+.big.ALLOW{color:var(--allow);background:var(--allow-soft)}
+.big.NUDGE{color:var(--nudge);background:var(--nudge-soft)}
+.big.HOLD{color:var(--hold);background:var(--hold-soft)}
+.big.BLOCK{color:var(--block);background:var(--block-soft)}
+.big.idle{color:var(--muted);background:var(--sunk)}
+.verdict .what{font-size:13.5px;color:var(--ink2);max-width:36ch}
+
+.ladder{margin-top:16px;position:relative}
+.ladder .bar{position:relative;height:14px;border-radius:4px;display:grid;overflow:hidden;gap:2px}
+.ladder .seg{height:100%}
+.ladder .marker{position:absolute;top:-5px;width:3px;height:24px;background:var(--ink);border-radius:2px;transform:translateX(-1px);transition:left .5s cubic-bezier(.2,.8,.2,1)}
+.ladder .ticks{position:relative;height:30px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.ladder .ticks span{position:absolute;top:4px;transform:translateX(-50%);white-space:nowrap}
+
+.models{display:grid;gap:10px}
+.mrow{display:grid;grid-template-columns:22px minmax(0,1fr) 58px 64px;gap:8px;align-items:center}
+.mrow .k{font-family:var(--f-mono);font-weight:500;width:22px;height:22px;display:grid;place-items:center;border-radius:5px;background:var(--sunk);border:1px solid var(--line);font-size:12px}
+.mrow .n{font-size:13px;line-height:1.25}
+.mrow .n small{display:block;color:var(--muted);font-size:11.5px}
+.mrow .track{grid-column:2/3;height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.mrow .fill{height:100%;background:var(--accent);border-radius:0 4px 4px 0;transition:width .5s}
+.mrow .p,.mrow .c{font-family:var(--f-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+.mrow .c{color:var(--muted)}
+.mhead{display:grid;grid-template-columns:22px minmax(0,1fr) 58px 64px;gap:8px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.mhead span:nth-child(3),.mhead span:nth-child(4){text-align:right}
+.sum{border-top:1px dashed var(--line);padding-top:8px;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12.5px}
+
+.pipe{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pipe .st{flex:1 1 120px;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);font-size:12px;transition:border-color .25s,background .25s}
+.pipe .st b{display:block;font-size:12.5px;font-weight:600}
+.pipe .st span{color:var(--muted)}
+.pipe .st.on{border-color:var(--accent);background:var(--accent-soft)}
+
+.episode{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.episode .ep{flex:1 1 90px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);font-size:12px;min-width:0}
+.episode .ep .a{font-family:var(--f-mono);font-size:13px}
+.episode .ep.skipped{opacity:.5;border-style:dashed}
+.epnote{margin-top:8px;font-size:13px;color:var(--ink2)}
+
+/* audiences */
+.aud{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.aud{grid-template-columns:minmax(0,1fr)}}
+.phone{background:var(--phone);border-radius:30px;padding:12px;max-width:290px;width:100%;margin-inline:auto;box-shadow:0 1px 0 var(--line)}
+.screen{background:var(--phone-card);border-radius:20px;min-height:430px;color:var(--phone-ink);padding:14px;display:flex;flex-direction:column;gap:10px}
+.appbar{display:flex;justify-content:space-between;font-size:12px;opacity:.8}
+.pay{background:rgba(255,255,255,.06);border-radius:12px;padding:12px}
+.pay .amt{font-family:var(--f-display);font-size:28px;font-weight:700}
+.pay .to{font-size:12px;opacity:.75}
+.alert{border-radius:12px;padding:12px;font-size:13px;line-height:1.45}
+.alert .h{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.alert.NUDGE{background:#3a2c0d;color:#ffe2a8}
+.alert.HOLD{background:#40220d;color:#ffd2b3}
+.alert.BLOCK{background:#451515;color:#ffc9c9}
+.alert.ALLOW{background:#0f3323;color:#bfeed5}
+.alert .zh{font-family:var(--f-zh)}
+.lang{display:flex;gap:6px}
+.lang button{all:unset;cursor:pointer;font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.25)}
+.lang button[aria-pressed="true"]{background:rgba(255,255,255,.16)}
+.lang button:focus-visible{outline:2px solid #9cc0ff}
+.src{font-family:var(--f-mono);font-size:10.5px;opacity:.65}
+.phone-actions{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.phone-actions span{text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.08);font-size:12.5px}
+.empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:8px}
+.screen .empty{color:#9fb0bf;border-color:rgba(255,255,255,.15)}
+
+.casefile{display:grid;gap:14px;min-width:0}
+.sms{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--sunk)}
+.sms .bubble{margin-top:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:13px;max-width:52ch}
+.reasons{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.reasons li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:start;font-size:13px}
+.reasons .m{font-family:var(--f-mono);font-size:11px;width:22px;height:20px;display:grid;place-items:center;border-radius:4px;border:1px solid var(--line);background:var(--sunk)}
+.reasons .code{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.excerpt{font-size:12.5px;border-left:2px solid var(--line);padding:2px 0 2px 10px;color:var(--ink2)}
+.excerpt .src2{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);display:block;margin-bottom:2px}
+
+/* bands */
+.band{margin-top:30px}
+.band>.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.band>.head p{color:var(--ink2);max-width:70ch}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+textarea{width:100%;min-height:96px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);font-family:var(--f-body);font-size:13.5px;color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-block:8px}
+.pill{cursor:pointer;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--sunk)}
+.pill:hover{border-color:var(--accent)}
+.gr{margin-top:10px;display:grid;gap:4px;font-size:13px}
+.gr .line{display:grid;grid-template-columns:20px minmax(0,1fr);gap:6px}
+.ok{color:var(--allow)} .bad{color:var(--block)}
+.gr .out{margin-top:8px;padding:10px;border-radius:8px;background:var(--sunk);border:1px solid var(--line)}
+
+.chain{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;max-height:330px;overflow:auto}
+.chain li{display:grid;grid-template-columns:28px 58px minmax(0,1fr);gap:8px;align-items:center;font-size:12px;padding:6px 8px;border-radius:6px;background:var(--sunk);border:1px solid transparent}
+.chain li .h{font-family:var(--f-mono);font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chain li.broken{border-color:var(--block);background:var(--block-soft)}
+.chain li.tampered .h::after{content:" · edited";color:var(--block)}
+.chain .n{font-family:var(--f-mono);color:var(--muted)}
+.vres{margin-top:10px;font-size:13px;min-height:20px}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.kpi .v{font-family:var(--f-display);font-size:34px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--ink2)}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:4px}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px}
+@media (max-width:900px){.charts{grid-template-columns:minmax(0,1fr)}}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .cap{font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink2);margin-bottom:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 8px;border-radius:6px;white-space:nowrap;font-family:var(--f-mono);transform:translate(-50%,-110%);opacity:0;transition:opacity .1s;z-index:5}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono)}
+details summary{cursor:pointer;color:var(--accent);font-size:13px;margin-top:8px}
+.arch{overflow-x:auto}
+.dg{display:grid;gap:12px;min-width:640px;padding:4px}
+.dg-host{font-family:var(--f-mono);font-size:12px;color:var(--accent);font-weight:500}
+.dg-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}
+.dg-col{display:grid;gap:10px}
+.dg-box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface);display:grid;gap:2px}
+.dg-box b{font-size:13.5px}.dg-box span{font-size:12px;color:var(--muted)}
+.dg-box.hi{background:var(--accent-soft)}
+.dg-core{border:1.5px dashed var(--hold);border-radius:10px;padding:10px 12px 12px;display:grid;gap:10px}
+.dg-tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--hold)}
+.dg-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:10px}
+.dg-vault{border-radius:8px;padding:12px 14px;background:var(--ink);color:var(--bg);display:grid;gap:2px}
+.dg-vault b{font-size:13.5px}.dg-vault span{font-size:12px;opacity:.8}
+.arch pre.mermaid{background:transparent;margin:0}
+.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M11 16.5 14.5 20 21.5 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>
+      <div class="eyebrow">Team Swaggers · IBM Z Datathon 2026 · Theme 1</div>
+      <h1>ScamBreaker-Z</h1>
+      <div class="tag">Stops scams between “Send” and settlement, on IBM LinuxONE.</div>
+    </div>
+  </div>
+  <div class="facts" aria-label="Platform">
+    <span class="fact">IBM z17 · s390x</span>
+    <span class="fact">Telum NNPA · zDNN</span>
+    <span class="fact">IBM Granite 3.3 2B on-box</span>
+    <span class="fact">LUKS2 · CPACF</span>
+    <span class="fact">SHA-256 audit chain</span>
+  </div>
+</header>
+
+<div class="notice" role="note">
+  <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v5M10 6.2v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <p><b>This page is a browser walkthrough of the decision flow.</b> The stacker weights and the ALLOW · NUDGE · HOLD · BLOCK thresholds are the real values fitted on our LinuxONE VM. Models A, B and C are simplified stand-ins here, so outcomes can differ from the production system. The customer messages are the vetted fallback templates; on LinuxONE, IBM Granite writes them. Every figure under <a href="#results">Measured on LinuxONE</a> comes from our held-out test days.</p>
+</div>
+
+<section class="console" aria-label="Try a transfer">
+  <!-- left: controls -->
+  <div class="panel">
+    <div class="ph"><h2>Send a transfer</h2><span class="eyebrow">Fictional customers</span></div>
+    <div class="scen" id="scen" role="group" aria-label="Scenarios">
+      <button data-s="tan" aria-pressed="false"><span class="truth" style="color:var(--block)">Scam · gov. impersonation</span><span class="t">Mdm Tan, 72 · S$18,500</span><span class="d">A caller posing as a government officer tells her to move her savings to a “safe account” while staying on the line.</span></button>
+      <button data-s="ravi" aria-pressed="false"><span class="truth" style="color:var(--block)">Scam · investment · 4 payments</span><span class="t">Ravi, 34 · S$500 → S$8,000</span><span class="d">An online “mentor” shows fake crypto profits and asks for bigger top-ups each time.</span></button>
+      <button data-s="aisha" aria-pressed="false"><span class="truth" style="color:var(--allow)">Genuine</span><span class="t">Aisha, 45 · S$9,800</span><span class="d">Her son’s semester fees to the university bursar she added two days ago.</span></button>
+      <button data-s="custom" aria-pressed="false"><span class="truth" style="color:var(--accent)">Sandbox</span><span class="t">Build your own</span><span class="d">Change any signal below and send it.</span></button>
+    </div>
+
+    <form id="form" autocomplete="off">
+      <fieldset>
+        <legend class="eyebrow">Payment</legend>
+        <div class="row"><label for="f-amt">Amount (S$)</label><input id="f-amt" type="number" min="1" step="1" value="18500"></div>
+        <div class="row"><label for="f-median">Customer’s usual payment (S$)</label><input id="f-median" type="number" min="1" step="1" value="175"></div>
+        <div class="row"><label for="f-rail">Rail</label><select id="f-rail"><option>ACH</option><option>Wire</option><option>Bitcoin</option></select></div>
+        <div class="row"><label for="f-usual">Customer’s usual rail</label><select id="f-usual"><option>ACH</option><option>Wire</option><option>Bitcoin</option></select></div>
+        <div class="row"><label for="f-prev">Last payment to this payee (S$, 0 = first ever)</label><input id="f-prev" type="number" min="0" step="1" value="0"></div>
+        <div class="row"><label for="f-gap">Minutes since previous transfer</label><input id="f-gap" type="number" min="0" step="1" value="2880"></div>
+        <div class="row"><label for="f-payee">Payee account pattern</label><select id="f-payee"><option value="mule">Fan-in, pass-through (mule-like)</option><option value="ordinary">Established, ordinary</option><option value="young">Opened hours ago</option></select></div>
+      </fieldset>
+      <fieldset>
+        <legend class="eyebrow">App session</legend>
+        <div class="toggles">
+          <label class="chk"><input id="f-call" type="checkbox" checked> On a phone call</label>
+          <label class="chk"><input id="f-unknown" type="checkbox" checked> Unknown caller</label>
+          <label class="chk"><input id="f-remote" type="checkbox"> Remote-access app</label>
+          <label class="chk"><input id="f-device" type="checkbox"> New device</label>
+        </div>
+        <div class="row"><label for="f-added">Payee added (minutes ago)</label><input id="f-added" type="number" min="0" step="1" value="3"></div>
+        <div class="row"><label for="f-session">Session length (minutes)</label><input id="f-session" type="number" min="0" step="0.5" value="9"></div>
+        <div class="row"><label for="f-hes">Hesitant input <span class="mono" id="hes-v">1.6</span></label><input id="f-hes" type="range" min="-1" max="3" step="0.1" value="1.6"></div>
+        <div class="row"><label for="f-failed">Failed attempts</label><input id="f-failed" type="number" min="0" max="9" step="1" value="1"></div>
+      </fieldset>
+      <div class="btns">
+        <button class="btn" id="send" type="submit">Send transfer</button>
+        <button class="btn ghost" id="play" type="button" hidden>Play all 4 payments</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- right: decision + audiences -->
+  <div class="right">
+    <div class="panel">
+      <div class="ph"><h2>Decision</h2><span class="eyebrow" id="dec-meta">waiting for a transfer</span></div>
+      <div class="decision">
+        <div>
+          <div class="verdict"><span class="big idle" id="verdict">—</span><p class="what" id="what">Pick a scenario on the left, then send the transfer.</p></div>
+          <div class="ladder" aria-label="Friction ladder">
+            <div class="bar" id="ladbar"></div>
+            <div class="marker" id="marker" style="left:0%" hidden></div>
+            <div class="ticks" id="ticks"></div>
+          </div>
+          <p class="muted" style="font-size:12.5px">Thresholds were set on validation days so at most 1% of genuine payments are nudged, 0.2% held and 0.05% blocked.</p>
+          <div class="episode" id="episode" hidden></div>
+          <p class="epnote" id="epnote" hidden></p>
+        </div>
+        <div class="models">
+          <div class="mhead"><span></span><span>Specialist model</span><span>p(scam)</span><span>log-odds</span></div>
+          <div class="mrow"><span class="k">A</span><span class="n">Payee mule risk<small>XGBoost · real AMLworld labels</small></span><span class="p" id="pA">–</span><span class="c" id="cA">–</span><div class="track"><div class="fill" id="bA" style="width:0"></div></div></div>
+          <div class="mrow"><span class="k">B</span><span class="n">Customer behaviour<small>LSTM over last 8 transfers · Telum NNPA</small></span><span class="p" id="pB">–</span><span class="c" id="cB">–</span><div class="track"><div class="fill" id="bB" style="width:0"></div></div></div>
+          <div class="mrow"><span class="k">C</span><span class="n">Coercion in the session<small>Logistic regression</small></span><span class="p" id="pC">–</span><span class="c" id="cC">–</span><div class="track"><div class="fill" id="bC" style="width:0"></div></div></div>
+          <div class="sum"><span>Stacker: −4.56 + 0.06·A + 0.77·B + 0.61·C</span><span id="score">score –</span></div>
+          <div class="pipe" id="pipe" aria-label="Request path">
+            <div class="st" data-i="0"><b>Ingest</b><span>Redis Streams</span></div>
+            <div class="st" data-i="1"><b>Features</b><span>point-in-time</span></div>
+            <div class="st" data-i="2"><b>A · B · C</b><span>one micro-batch</span></div>
+            <div class="st" data-i="3"><b>Decide</b><span>stacker + ladder</span></div>
+            <div class="st" data-i="4"><b>Respond</b><span>Granite on-box</span></div>
+            <div class="st" data-i="5"><b>Audit</b><span>hash chain</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="aud">
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Customer’s phone</div>
+        <div class="phone"><div class="screen" id="screen"><div class="appbar"><span>Demo Bank</span><span></span></div><div class="empty">Send a transfer to see what the customer sees.</div></div></div>
+      </div>
+      <div class="panel casefile">
+        <div class="ph" style="margin:0"><h2>Analyst case file</h2><span class="eyebrow" id="caseid"></span></div>
+        <div id="casebody"><div class="empty">Payments that are nudged, held or blocked open a case here, with every reason and the model that raised it.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="h-trust">
+  <div class="head"><div><div class="eyebrow">The model decides, the LLM explains</div><h2 id="h-trust">Guardrails and the audit trail</h2></div></div>
+  <div class="two">
+    <div class="panel">
+      <div class="ph"><h3>Guardrail check on generated text</h3><span class="eyebrow">same rules as guardrails.py</span></div>
+      <p class="muted" style="font-size:13px">Every Granite message passes these checks before a customer sees it. Any failure, or a timeout, swaps in the vetted template. Try a preset or type your own.</p>
+      <div class="presets" id="presets">
+        <button class="pill" type="button" data-p="0">Clean warning</button>
+        <button class="pill" type="button" data-p="1">Contains a link</button>
+        <button class="pill" type="button" data-p="2">Phone number</button>
+        <button class="pill" type="button" data-p="3">Wrong amount</button>
+        <button class="pill" type="button" data-p="4">Asks for an OTP</button>
+      </div>
+      <label for="gr-text" class="eyebrow">Candidate message</label>
+      <textarea id="gr-text"></textarea>
+      <div class="gr" id="gr"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>Tamper-evident decision log</h3><span class="eyebrow">SHA-256, computed in your browser</span></div>
+      <p class="muted" style="font-size:13px">Each record stores the hash of the previous one plus its own body. Edit any record and verification fails from that line on. Your transfers above are appended here.</p>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn" id="verify" type="button">Verify hash chain</button>
+        <button class="btn ghost" id="tamper" type="button">Edit an old record</button>
+        <button class="btn ghost" id="reset" type="button">Reset log</button>
+      </div>
+      <div class="vres" id="vres" aria-live="polite"></div>
+      <ol class="chain" id="chain"></ol>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="results" aria-labelledby="h-res">
+  <div class="head"><div><div class="eyebrow">Held-out test days · 9–10 Sep 2022 · IBM AMLworld HI-Small</div><h2 id="h-res">Measured on LinuxONE</h2></div>
+  <p>1,000 simulated scam episodes (4,054 payments) injected into real AMLworld traffic, scored against 155,809 genuine digital payments. Payee model A is tested on AMLworld’s own laundering labels.</p></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">87.9%</div><div class="l">of scam money held or blocked</div><div class="s">85.7% of scam payments; 97.0% get at least a nudge</div></div>
+    <div class="kpi"><div class="v">90.1%</div><div class="l">of scam episodes stopped</div><div class="s">median 0 payments before the first hold</div></div>
+    <div class="kpi"><div class="v">0.20%</div><div class="l">of genuine payments held</div><div class="s">budget 0.2% · 1.0% nudged · 0.045% blocked</div></div>
+    <div class="kpi"><div class="v">29.8%</div><div class="l">of large first-time genuine payments held</div><div class="s">the hardest case, disclosed (600 hard negatives)</div></div>
+  </div>
+  <div class="charts">
+    <div class="panel chart" id="ch-abl"><h3>Each model adds something</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">Share of scam money held or blocked, by which models feed the stacker</p></div>
+    <div class="panel chart" id="ch-typ"><h3>By scam type</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">Share of scam payments held or blocked</p></div>
+    <div class="panel chart" id="ch-nnpa"><h3>Behaviour LSTM: Telum NNPA vs CPU</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">Microseconds per transfer, same model and inputs, log scales</p></div>
+    <div class="panel chart" id="ch-lat"><h3>End-to-end decision latency</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">One scorer process, bus to decision, 30 s per step</p></div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+    <div class="ph"><h3>Models on test days</h3><span class="eyebrow">docs/results/metrics.json</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Model</th><th>Labels</th><th class="r">AUPRC</th><th class="r">AUROC</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>A · payee mule risk</td><td>real AMLworld</td><td class="r">0.318</td><td class="r">0.953</td><td>base rate 0.19% · 62% recall at 1% FPR</td></tr>
+        <tr><td>B · behaviour LSTM</td><td>simulated episodes</td><td class="r">0.925</td><td class="r">0.997</td><td>high because simulated patterns separate well</td></tr>
+        <tr><td>C · coercion</td><td>simulated episodes</td><td class="r">0.331</td><td class="r">0.942</td><td>signals drawn from overlapping distributions</td></tr>
+        <tr><td>D · typology</td><td>simulated episodes</td><td class="r">–</td><td class="r">–</td><td>91.2% accuracy across 5 scam types</td></tr>
+        <tr><td>Unseen scam type</td><td>job scams held out</td><td class="r">–</td><td class="r">–</td><td>49% held when unseen vs 94% when seen</td></tr>
+        <tr><td>Granite 3.3 2B · Q8_0</td><td>–</td><td class="r">–</td><td class="r">–</td><td>5.0 tok/s, VXE build vs 1.35 tok/s stock (3.7×)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="h-arch">
+  <div class="head"><div><div class="eyebrow">One LinuxONE server, six containers</div><h2 id="h-arch">Architecture</h2></div>
+  <p>The AI services sit on a Docker network with no route to the internet. Data, models and the audit log live on a LUKS2 volume encrypted by the CPACF crypto unit. Prompts carry tokens, never names or account numbers.</p></div>
+  <div class="panel arch">
+<div class="dg" role="img" aria-label="Architecture: web console and replayer feed Redis Streams; inside an internal network with no internet route, the scorer runs models A, B and C and the stacker, and the Granite worker with guardrails writes the messages; everything is stored on a LUKS2 volume encrypted by CPACF.">
+  <div class="dg-host">IBM LinuxONE · z17 (Telum II) · Ubuntu 24.04 · Docker Compose</div>
+  <div class="dg-row">
+    <div class="dg-col">
+      <div class="dg-box"><b>Web console</b><span>Flask + live updates · the only published port</span></div>
+      <div class="dg-box"><b>Replayer</b><span>IBM AMLworld test days at 1–5k tx/s</span></div>
+    </div>
+    <div class="dg-core">
+      <div class="dg-tag">Internal network · no route to the internet</div>
+      <div class="dg-grid">
+        <div class="dg-box"><b>Redis Streams</b><span>transfers · decisions · jobs</span></div>
+        <div class="dg-box hi"><b>Scorer</b><span>point-in-time features → A XGBoost · B LSTM on Telum NNPA · C coercion → stacker + friction ladder</span></div>
+        <div class="dg-box"><b>Guardrails</b><span>links · phone numbers · amounts · OTP requests</span></div>
+        <div class="dg-box hi"><b>Granite worker + llama.cpp</b><span>IBM Granite 3.3 2B, VXE build · BM25 RAG over policy and scam playbooks</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="dg-vault"><b>/secure · LUKS2 AES-XTS-512 on the CPACF crypto unit</b><span>raw data, models, HMAC key and the SHA-256 hash-chained audit log</span></div>
+</div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div>Live system on our LinuxONE Community Cloud VM: <a href="http://148.100.76.147:8080" target="_blank" rel="noopener">148.100.76.147:8080</a>. All people, payees and “Demo Bank” are fictional.</div>
+  <div>Problem data: Singapore Police Force, scams and cybercrime brief 2025 (S$913.1M lost, 37,308 scam cases, 81.8% self-effected transfers); MHA reply of 4 Mar 2026 (12 restriction orders by 15 Feb 2026; graduated restrictions shelved because banks said they need significant system changes).</div>
+  <div>Base data: IBM Transactions for Anti Money Laundering (AMLworld), Altman et al., NeurIPS 2023. LLM: IBM Granite 3.3 2B Instruct (Apache-2.0).</div>
+</footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = (n) => "S$" + Math.round(n).toLocaleString("en-SG");
+
+/* ---------- real values fitted on LinuxONE (docs/results/metrics.json) ---------- */
+const STACK = { b0: -4.5552054448001345, wA: 0.06496199455753397, wB: 0.7727305232021111, wC: 0.6113723704610767 };
+const TH = { nudge: 0.09171543274596315, hold: 0.46785213672651266, block: 0.7656156545787789 };
+const DEC = ["ALLOW", "NUDGE", "HOLD", "BLOCK"];
+
+const sig = z => 1 / (1 + Math.exp(-z));
+const logit = p => { p = Math.min(Math.max(p, 1e-6), 1 - 1e-6); return Math.log(p / (1 - p)); };
+const clip = z => Math.max(-9, Math.min(9, z));
+
+/* ---------- simplified stand-ins for models A, B, C ---------- */
+const PAYEE = {
+  mule: { pA: 0.62, senders: 14, pass: 0.96, ageH: 30 },
+  ordinary: { pA: 0.03, senders: 2, pass: 0.10, ageH: 2400 },
+  young: { pA: 0.25, senders: 1, pass: 0.0, ageH: 3 },
+};
+function modelB(x) {
+  const ratio = x.amt / Math.max(1, x.median);
+  const esc = x.prev > 0 ? Math.log((x.amt + 1) / (x.prev + 1)) : 0;
+  const t = {
+    ratio, esc,
+    spike: 4.2 * Math.log(Math.max(ratio, 1)),
+    newp: x.prev > 0 ? 0 : 2.2,
+    rail: x.rail !== x.usual ? 2.6 : 0,
+    escw: 3.0 * Math.max(esc, 0),
+    rapid: x.gap > 0 && x.gap < 15 ? 1.0 : 0,
+  };
+  t.z = clip(-7.2 + t.spike + t.newp + t.rail + t.escw + t.rapid);
+  return t;
+}
+const C_W = { on_call: 1.5, unknown_caller: 2.0, remote_access: 1.8, payee_added: 0.5, session: 0.6, hesitation: 0.55, failed: 0.45, new_device: 1.0 };
+function modelC(x) {
+  const recent = Math.max(0, Math.log1p(1440) - Math.log1p(x.added));
+  const parts = {
+    on_call: C_W.on_call * x.call,
+    unknown_caller: C_W.unknown_caller * (x.call && x.unknown ? 1 : 0),
+    remote_access: C_W.remote_access * x.remote,
+    payee_added: C_W.payee_added * recent,
+    session: C_W.session * Math.log(Math.max(x.session * 60, 30) / 140),
+    hesitation: C_W.hesitation * x.hes,
+    failed: C_W.failed * x.failed,
+    new_device: C_W.new_device * x.device,
+  };
+  const z = clip(-3.0 + Object.values(parts).reduce((a, b) => a + b, 0));
+  return { z, parts };
+}
+function score(x) {
+  const pay = PAYEE[x.payee];
+  const b = modelB(x), c = modelC(x);
+  const pA = pay.pA, pB = sig(b.z), pC = sig(c.z);
+  const cA = STACK.wA * logit(pA), cB = STACK.wB * b.z, cC = STACK.wC * c.z;
+  const p = sig(STACK.b0 + cA + cB + cC);
+  const d = (p >= TH.block) ? 3 : (p >= TH.hold) ? 2 : (p >= TH.nudge) ? 1 : 0;
+  return { x, pay, b, c, pA, pB, pC, cA, cB, cC, p, d, decision: DEC[d] };
+}
+
+/* reason codes, following serve/reasons.py */
+function reasons(s) {
+  const out = [], x = s.x, b = s.b;
+  if (b.ratio >= 3) out.push(["AMOUNT_SPIKE", `Amount is ${Math.round(b.ratio)}× this customer’s usual payment`, "B", Math.min(3, Math.log(b.ratio))]);
+  if (x.prev <= 0) out.push(["NEW_PAYEE", "First ever payment to this payee", "B", 0.8]);
+  if (x.prev > 0 && b.esc > 0.3) out.push(["ESCALATION", `${Math.exp(b.esc).toFixed(1)}× the previous payment to the same payee`, "B", Math.min(2.5, 1.5 * b.esc)]);
+  if (x.rail !== x.usual) out.push(["NEW_RAIL", `Paid by ${x.rail}; this customer normally uses ${x.usual}`, "B", 1.0]);
+  if (x.gap > 0 && x.gap < 15) out.push(["RAPID", `Sent ${Math.round(x.gap)} min after the previous transfer`, "B", 0.5]);
+  if (s.pay.senders >= 4) out.push(["FAN_IN", `Payee received money from ${s.pay.senders} different senders in 24h`, "A", 0.9]);
+  if (s.pay.pass >= 0.5) out.push(["PASS_THROUGH", `Payee forwarded ${Math.round(s.pay.pass * 100)}% of its inflows within 24h`, "A", 0.8]);
+  if (s.pay.ageH < 48) out.push(["YOUNG_PAYEE", `Payee account first active ${s.pay.ageH}h ago`, "A", 0.6]);
+  const p = s.c.parts;
+  const ct = [
+    ["ON_CALL", "Customer is on a phone call" + (x.call && x.unknown ? " with an unknown number" : ""), p.on_call + p.unknown_caller],
+    ["REMOTE_ACCESS", "A remote-access app is running on the device", p.remote_access],
+    ["PAYEE_ADDED_LOG", `Payee was added ${Math.round(x.added)} min ago`, x.added <= 1440 ? p.payee_added : 0],
+    ["SESSION_LOG", `Unusually long session (${Math.round(x.session)} min)`, p.session],
+    ["HESITATION", "Stop-start, hesitant input", p.hesitation],
+    ["FAILED", `${x.failed} failed attempts before this one`, p.failed],
+    ["NEW_DEVICE", "Payment made from a new device", p.new_device],
+  ];
+  for (const [code, text, w] of ct) if (w > 0.35) out.push([code, text, "C", w]);
+  out.sort((a, b2) => b2[3] - a[3]);
+  return out.slice(0, 6);
+}
+function typology(s) {
+  const x = s.x;
+  if ((x.call && x.unknown) || x.remote) return "gov_impersonation";
+  if (x.rail === "Bitcoin" || (x.prev > 0 && s.b.esc > 0.3 && x.gap > 60)) return "investment";
+  if (s.b.ratio < 0.5 && x.gap < 120) return "job_task";
+  if (s.b.ratio >= 1.5 && x.hes > 0.4) return "romance";
+  return "ecommerce";
+}
+const TYP = {
+  gov_impersonation: { label: "Government official impersonation", file: "typologies/government_impersonation.md",
+    rec: "BLOCK or HOLD. Call the customer on the registered number only, alert the trusted contact, and escalate to the police anti-scam centre if the customer insists on paying.",
+    en: "Government officers will never ask you to move money to a 'safe account'.", zh: "政府官员绝不会要求您把钱转到“安全账户”。" },
+  investment: { label: "Investment scam", file: "typologies/investment.md",
+    rec: "NUDGE on the first unusual payment, HOLD when escalation continues, and call the customer before releasing further payments.",
+    en: "Investments that promise guaranteed high returns are almost always scams.", zh: "保证高回报的投资几乎都是骗局。" },
+  job_task: { label: "Job / task scam", file: "typologies/job_task.md",
+    rec: "NUDGE early in the series and HOLD once the pattern repeats; payees should be reviewed as possible money mules.",
+    en: "Real jobs never ask you to pay first to unlock commission.", zh: "真正的工作不会要求您先付钱才能领取佣金。" },
+  romance: { label: "Fake friend / romance scam", file: "typologies/romance.md",
+    rec: "NUDGE or HOLD depending on amount and repetition; alert the trusted contact when the customer is elderly or vulnerable.",
+    en: "Someone you have only met online asking for money is a common scam.", zh: "只在网上认识的人向您要钱，是常见的诈骗手法。" },
+  ecommerce: { label: "E-commerce scam", file: "typologies/ecommerce.md",
+    rec: "NUDGE with a payee-confirmation prompt; avoid holding small genuine payments.",
+    en: "Sellers who ask for a bank transfer outside the platform are high-risk.", zh: "卖家要求您在平台外转账付款，风险很高。" },
+};
+const POLICY = {
+  NUDGE: "Show an in-app warning that names the specific risk signal (for example a first payment to a new payee). The customer may continue after confirming the payee.",
+  HOLD: "Pause the transfer for up to 24 hours. The fraud team calls the customer on the registered number only, never on a number supplied in the session. If the customer has registered a trusted contact, alert them immediately.",
+  BLOCK: "Stop the transfer and lock outgoing digital transfers for 24 hours (money-lock style). The fraud team calls the customer and the trusted contact. If the customer still insists on paying a likely scammer, escalate to the police anti-scam centre.",
+};
+
+/* templates, following serve/guardrails.py */
+function customerText(typ, amt, decision, lang, name) {
+  const t = TYP[typ];
+  if (lang === "zh") {
+    const verb = decision !== "BLOCK" ? "暂停" : "拦截";
+    return `${name}，为了保护您，我们${verb}了这笔 S$${Math.round(amt).toLocaleString("en-SG")} 的转账。${t.zh}请不要在通话中转账。我们会致电您登记的电话号码。`;
+  }
+  const verb = decision !== "BLOCK" ? "paused" : "stopped";
+  return `${name}, we have ${verb} this ${fmt(amt)} transfer to protect you. ${t.en} Please do not send money while anyone is on the phone with you - we will call you on your registered number.`;
+}
+const contactText = (label, amt, name) => `Demo Bank: a ${fmt(amt)} transfer by ${name} was paused as a likely ${label.toLowerCase()}. Please call ${name} now and check they are safe.`;
+
+/* ---------- scenarios (scenarios/*.json) ---------- */
+const PERSONA = {
+  tan: { name: "Mdm Tan", contact: "Grace (daughter)", lang: "zh", median: 175, usual: "ACH", payee: "LIM WEI JIE" },
+  ravi: { name: "Ravi", contact: "Priya (sister)", lang: "en", median: 210, usual: "ACH", payee: "ALPHAYIELD CAPITAL" },
+  aisha: { name: "Aisha", contact: "Omar (husband)", lang: "en", median: 800, usual: "ACH", payee: "DEMO UNIVERSITY BURSAR" },
+  custom: { name: "Customer", contact: "your trusted contact", lang: "en", median: 300, usual: "ACH", payee: "NEW PAYEE" },
+};
+const SCEN = {
+  tan: { payee: "mule", steps: [{ amt: 18500, rail: "ACH", gap: 2880, call: 1, unknown: 1, remote: 0, added: 3, session: 9, hes: 1.6, failed: 1, device: 0 }] },
+  ravi: { payee: "mule", steps: [
+    { amt: 500, rail: "Bitcoin", gap: 720, call: 0, unknown: 0, remote: 0, added: 35, session: 3.5, hes: 0.3, failed: 0, device: 0 },
+    { amt: 1200, rail: "Bitcoin", gap: 300, call: 0, unknown: 0, remote: 0, added: 335, session: 3.2, hes: 0.4, failed: 0, device: 0 },
+    { amt: 3000, rail: "Bitcoin", gap: 420, call: 0, unknown: 0, remote: 0, added: 755, session: 4.3, hes: 0.6, failed: 1, device: 0 },
+    { amt: 8000, rail: "Bitcoin", gap: 480, call: 1, unknown: 1, remote: 0, added: 1235, session: 7, hes: 1.0, failed: 1, device: 0 } ] },
+  aisha: { payee: "ordinary", steps: [{ amt: 9800, rail: "ACH", gap: 1440, call: 0, unknown: 0, remote: 0, added: 2880, session: 3, hes: 0.1, failed: 0, device: 0 }] },
+};
+
+let current = "tan", lastScore = null, phoneLang = "en", busy = false;
+
+function fill(slug, k = 0) {
+  const P = PERSONA[slug], sc = SCEN[slug];
+  if (!sc) return;
+  const st = sc.steps[k], prev = k > 0 ? sc.steps[k - 1].amt : 0;
+  $("#f-amt").value = st.amt; $("#f-median").value = P.median; $("#f-rail").value = st.rail; $("#f-usual").value = P.usual;
+  $("#f-prev").value = prev; $("#f-gap").value = st.gap; $("#f-payee").value = sc.payee;
+  $("#f-call").checked = !!st.call; $("#f-unknown").checked = !!st.unknown; $("#f-remote").checked = !!st.remote; $("#f-device").checked = !!st.device;
+  $("#f-added").value = st.added; $("#f-session").value = st.session; $("#f-hes").value = st.hes; $("#hes-v").textContent = (+st.hes).toFixed(1);
+  $("#f-failed").value = st.failed;
+}
+function read() {
+  const n = id => Math.max(0, parseFloat($(id).value) || 0);
+  return {
+    amt: Math.max(1, n("#f-amt")), median: Math.max(1, n("#f-median")), rail: $("#f-rail").value, usual: $("#f-usual").value,
+    prev: n("#f-prev"), gap: n("#f-gap"), payee: $("#f-payee").value,
+    call: $("#f-call").checked ? 1 : 0, unknown: $("#f-unknown").checked ? 1 : 0, remote: $("#f-remote").checked ? 1 : 0, device: $("#f-device").checked ? 1 : 0,
+    added: n("#f-added"), session: n("#f-session"), hes: parseFloat($("#f-hes").value) || 0, failed: Math.min(9, Math.round(n("#f-failed"))),
+  };
+}
+function choose(slug) {
+  current = slug;
+  $$("#scen button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.s === slug)));
+  if (slug !== "custom") fill(slug, 0);
+  $("#play").hidden = slug !== "ravi";
+  $("#episode").hidden = true; $("#epnote").hidden = true;
+}
+
+/* ---------- ladder ---------- */
+function drawLadder() {
+  const w = [TH.nudge, TH.hold - TH.nudge, TH.block - TH.hold, 1 - TH.block];
+  const bar = $("#ladbar");
+  bar.style.gridTemplateColumns = w.map(v => `${v}fr`).join(" ");
+  bar.innerHTML = ["allow", "nudge", "hold", "block"].map(k => `<div class="seg" style="background:var(--${k})"></div>`).join("");
+  $("#ticks").innerHTML = [["0", 0], ["NUDGE " + TH.nudge.toFixed(2), TH.nudge], ["HOLD " + TH.hold.toFixed(2), TH.hold], ["BLOCK " + TH.block.toFixed(2), TH.block], ["1", 1]]
+    .map(([t, v]) => `<span style="left:${v * 100}%;${v === 0 ? "transform:none" : v === 1 ? "transform:translateX(-100%)" : ""}">${t}</span>`).join("");
+}
+
+/* ---------- render ---------- */
+const WHAT = {
+  ALLOW: "Sent with no friction. The decision is still logged.",
+  NUDGE: "Sent after the customer confirms the payee. An in-app warning names the risk.",
+  HOLD: "Paused for up to 24 hours. The bank calls the customer’s registered number and alerts the trusted contact.",
+  BLOCK: "Stopped. Outgoing transfers are locked for 24 hours and the bank calls the customer and the trusted contact.",
+};
+async function pipeline() {
+  const st = $$("#pipe .st");
+  st.forEach(e => e.classList.remove("on"));
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  for (const e of st) { e.classList.add("on"); if (!reduce) await new Promise(r => setTimeout(r, 110)); }
+}
+function renderDecision(s) {
+  const v = $("#verdict");
+  v.className = "big " + s.decision; v.textContent = s.decision;
+  $("#what").textContent = WHAT[s.decision];
+  $("#dec-meta").textContent = `${PERSONA[current].name} · ${fmt(s.x.amt)} · ${s.x.rail}`;
+  const m = $("#marker"); m.hidden = false; m.style.left = (s.p * 100).toFixed(2) + "%";
+  const set = (k, p, c) => { $("#p" + k).textContent = p.toFixed(3); $("#c" + k).textContent = (c >= 0 ? "+" : "") + c.toFixed(2); $("#b" + k).style.width = (p * 100).toFixed(1) + "%"; };
+  set("A", s.pA, s.cA); set("B", s.pB, s.cB); set("C", s.pC, s.cC);
+  $("#score").textContent = "score " + s.p.toFixed(3);
+}
+function renderPhone(s) {
+  const P = PERSONA[current], x = s.x, typ = typology(s);
+  const now = new Date();
+  let alert = "";
+  if (s.decision === "ALLOW") {
+    alert = `<div class="alert ALLOW"><div class="h">Sent</div>Your transfer is on its way.</div>`;
+  } else if (s.decision === "NUDGE") {
+    const top = reasons(s)[0];
+    alert = `<div class="alert NUDGE"><div class="h">Check before you pay</div>${esc(top ? top[1] : "This payment looks unusual")}. Make sure you know who ${esc(P.payee)} is before you continue.</div>
+      <div class="phone-actions"><span>Cancel</span><span>I know this payee</span></div>`;
+  } else {
+    const showZh = P.lang === "zh";
+    const lang = showZh ? phoneLang : "en";
+    const txt = customerText(typ, x.amt, s.decision, lang, P.name);
+    alert = `${showZh ? `<div class="lang" role="group" aria-label="Language"><button type="button" data-l="en" aria-pressed="${lang === "en"}">English</button><button type="button" data-l="zh" aria-pressed="${lang === "zh"}">中文</button></div>` : ""}
+      <div class="alert ${s.decision}"><div class="h">${s.decision === "BLOCK" ? "Transfer stopped" : "Transfer paused · 24h"}</div><div class="${lang === "zh" ? "zh" : ""}">${esc(txt)}</div></div>
+      <div class="src">Vetted template shown · Granite 3.3 2B writes this on LinuxONE</div>
+      <div class="phone-actions"><span>Cancel transfer</span><span>Wait for call</span></div>`;
+  }
+  $("#screen").innerHTML = `<div class="appbar"><span>Demo Bank</span><span>${now.toTimeString().slice(0, 5)}</span></div>
+    <div class="pay"><div class="to">To ${esc(P.payee)} · ${esc(x.rail)}</div><div class="amt">${fmt(x.amt)}</div></div>${alert}`;
+  $$("#screen .lang button").forEach(b => b.addEventListener("click", () => { phoneLang = b.dataset.l; renderPhone(s); }));
+}
+function renderCase(s, id) {
+  const P = PERSONA[current];
+  if (s.decision === "ALLOW") {
+    $("#caseid").textContent = "";
+    $("#casebody").innerHTML = `<div class="empty">Allowed, so no case was opened. The decision and its scores were still written to the audit log below.</div>`;
+    return;
+  }
+  const typ = typology(s), t = TYP[typ], R = reasons(s);
+  $("#caseid").textContent = "case " + id;
+  const held = s.decision === "HOLD" || s.decision === "BLOCK";
+  $("#casebody").innerHTML = `
+    <div class="verdict" style="gap:10px"><span class="chip ${s.decision}">${s.decision}</span><span class="mono" style="font-size:13px">score ${s.p.toFixed(3)} · ${fmt(s.x.amt)} · ${esc(s.x.rail)}</span></div>
+    <dl class="kv" style="margin:12px 0">
+      <dt>Customer</dt><dd>${esc(P.name)}${current === "custom" ? "" : " (fictional)"}</dd>
+      <dt>Payee</dt><dd>${esc(P.payee)} · mule-risk p=${s.pA.toFixed(2)}</dd>
+      ${held ? `<dt>Looks like</dt><dd>${esc(t.label)}</dd>` : ""}
+    </dl>
+    <div class="eyebrow" style="margin-bottom:6px">Reasons, strongest first</div>
+    <ul class="reasons">${R.map(r => `<li><span class="m">${r[2]}</span><span>${esc(r[1])}<br><span class="code">${r[0]}</span></span><span class="mono muted" style="font-size:11.5px">${r[3].toFixed(2)}</span></li>`).join("") || `<li><span class="m">–</span><span>No single signal stands out; the combined score crossed the threshold.</span><span></span></li>`}</ul>
+    ${held && P.contact ? `<div class="sms" style="margin-top:14px"><div class="eyebrow">Trusted contact · ${esc(P.contact)}</div><div class="bubble">${esc(contactText(t.label, s.x.amt, P.name))}</div></div>` : ""}
+    <div class="eyebrow" style="margin:14px 0 6px">Policy excerpts the narrative is grounded in</div>
+    <div style="display:grid;gap:8px">
+      <p class="excerpt"><span class="src2">[K1] policy/graduated_response.md · ${s.decision}</span>${esc(POLICY[s.decision])}</p>
+      ${held ? `<p class="excerpt"><span class="src2">[K2] ${t.file} · Recommended response</span>${esc(t.rec)}</p>` : ""}
+    </div>`;
+}
+
+/* ---------- audit chain ---------- */
+const enc = new TextEncoder();
+const canon = (o) => {
+  if (Array.isArray(o)) return "[" + o.map(canon).join(",") + "]";
+  if (o && typeof o === "object") return "{" + Object.keys(o).sort().map(k => JSON.stringify(k) + ":" + canon(o[k])).join(",") + "}";
+  return JSON.stringify(o);
+};
+const hasCrypto = true;
+/* Pure-JS SHA-256 so the demo also works on plain-http hosts, where Web Crypto is unavailable. */
+const K256 = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+function sha256Bytes(msg) {
+  const l = msg.length, nb = ((l + 9 + 63) >> 6) << 6, b = new Uint8Array(nb);
+  b.set(msg); b[l] = 0x80;
+  const dv = new DataView(b.buffer); dv.setUint32(nb - 4, (l * 8) >>> 0); dv.setUint32(nb - 8, Math.floor(l / 0x20000000));
+  const H = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]), w = new Uint32Array(64);
+  const r = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let o = 0; o < nb; o += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+    for (let i = 16; i < 64; i++) { const s0 = r(w[i-15],7) ^ r(w[i-15],18) ^ (w[i-15] >>> 3), s1 = r(w[i-2],17) ^ r(w[i-2],19) ^ (w[i-2] >>> 10); w[i] = (w[i-16] + s0 + w[i-7] + s1) >>> 0; }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (r(e,6) ^ r(e,11) ^ r(e,25)) + ((e & f) ^ (~e & g)) + K256[i] + w[i]) >>> 0;
+      const t2 = ((r(a,2) ^ r(a,13) ^ r(a,22)) + ((a & bb) ^ (a & c) ^ (bb & c))) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = bb; bb = a; a = (t1 + t2) >>> 0;
+    }
+    H[0]=(H[0]+a)>>>0; H[1]=(H[1]+bb)>>>0; H[2]=(H[2]+c)>>>0; H[3]=(H[3]+d)>>>0; H[4]=(H[4]+e)>>>0; H[5]=(H[5]+f)>>>0; H[6]=(H[6]+g)>>>0; H[7]=(H[7]+h)>>>0;
+  }
+  const out = new Uint8Array(32); const ov = new DataView(out.buffer); H.forEach((v, i) => ov.setUint32(i * 4, v)); return out;
+}
+const hex = (u8) => [...u8].map(x => x.toString(16).padStart(2, "0")).join("");
+async function sha256(s) { return hex(sha256Bytes(enc.encode(s))); }
+const randBytes = (n) => { const u = new Uint8Array(n); if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(u); else for (let i = 0; i < n; i++) u[i] = Math.random() * 256 | 0; return u; };
+let hmacKey = null;
+async function token(kind, v) {
+  if (!hmacKey) hmacKey = randBytes(64);
+  const ip = hmacKey.map(x => x ^ 0x36), op = hmacKey.map(x => x ^ 0x5c), m = enc.encode(kind + ":" + v);
+  const inner = new Uint8Array(64 + m.length); inner.set(ip); inner.set(m, 64);
+  const outer = new Uint8Array(96); outer.set(op); outer.set(sha256Bytes(inner), 64);
+  return kind.toUpperCase() + "_" + hex(sha256Bytes(outer)).slice(0, 12);
+}
+const GENESIS = "0".repeat(64);
+let chain = [];
+async function append(rec) {
+  const prev = chain.length ? chain[chain.length - 1].hash : GENESIS;
+  const hash = await sha256(prev + canon(rec));
+  chain.push({ prev, hash, rec });
+  drawChain();
+}
+function drawChain(bad = null) {
+  $("#chain").innerHTML = chain.map((c, i) => `<li class="${bad !== null && i >= bad ? "broken" : ""} ${c.tampered ? "tampered" : ""}">
+    <span class="n">${i + 1}</span><span class="chip ${c.rec.decision}" style="font-size:10.5px;padding:1px 5px">${c.rec.decision}</span>
+    <span class="h" title="${c.hash}">${esc(c.rec.src)} → ${esc(c.rec.dst)} · ${fmt(c.rec.amount_sgd)} · ${c.hash.slice(0, 16)}…</span></li>`).join("");
+  const box = $("#chain"); box.scrollTop = box.scrollHeight;
+}
+async function verify() {
+  let prev = GENESIS;
+  for (let i = 0; i < chain.length; i++) {
+    const c = chain[i], expect = await sha256(prev + canon(c.rec));
+    if (c.prev !== prev || c.hash !== expect) {
+      drawChain(i);
+      $("#vres").innerHTML = `<span class="bad">✕ Tampered.</span> The chain breaks at record ${i + 1}, after ${i} valid records.`;
+      return;
+    }
+    prev = c.hash;
+  }
+  drawChain();
+  $("#vres").innerHTML = `<span class="ok">✓ Intact.</span> ${chain.length} records, every hash recomputed and matched.`;
+}
+async function seedChain() {
+  chain = [];
+  const seed = [["ALLOW", 42, 0.002], ["NUDGE", 1310, 0.13], ["ALLOW", 86, 0.001], ["HOLD", 6400, 0.52], ["ALLOW", 230, 0.004], ["BLOCK", 15200, 0.91]];
+  for (let i = 0; i < seed.length; i++) {
+    const [d, a, sc] = seed[i];
+    await append({ id: "sample-" + (i + 1), decision: d, score: sc, src: await token("acct", "s" + i), dst: await token("acct", "d" + i), amount_sgd: a, sample: true });
+  }
+  $("#vres").innerHTML = `<span class="muted">Six sample records loaded. Send a transfer or verify the chain.</span>`;
+}
+
+/* ---------- send ---------- */
+async function send(x) {
+  const s = score(x);
+  lastScore = s;
+  await pipeline();
+  renderDecision(s);
+  renderPhone(s);
+  const id = Math.random().toString(16).slice(2, 10);
+  renderCase(s, id);
+  if (hasCrypto) await append({ id, decision: s.decision, score: +s.p.toFixed(4), scores: { A: +s.pA.toFixed(4), B: +s.pB.toFixed(4), C: +s.pC.toFixed(4) },
+    src: await token("acct", PERSONA[current].name), dst: await token("acct", PERSONA[current].payee), amount_sgd: Math.round(x.amt), reasons: reasons(s).map(r => r[0]) });
+  updateGuardAmounts();
+  return s;
+}
+async function playEpisode() {
+  if (busy) return; busy = true;
+  $("#send").disabled = $("#play").disabled = true;
+  const sc = SCEN.ravi, ep = $("#episode"), note = $("#epnote");
+  ep.hidden = false; note.hidden = true;
+  ep.innerHTML = sc.steps.map((st, k) => `<div class="ep" id="ep${k}"><div class="eyebrow">Payment ${k + 1}</div><div class="a">${fmt(st.amt)}</div><div class="d">–</div></div>`).join("");
+  let sent = 0, stoppedAt = null;
+  const total = sc.steps.reduce((a, b) => a + b.amt, 0);
+  for (let k = 0; k < sc.steps.length; k++) {
+    fill("ravi", k);
+    const s = await send(read());
+    $(`#ep${k} .d`).innerHTML = `<span class="chip ${s.decision}" style="font-size:10.5px;padding:1px 5px">${s.decision}</span>`;
+    if (s.d >= 2) { stoppedAt = k; for (let j = k + 1; j < sc.steps.length; j++) { $("#ep" + j).classList.add("skipped"); $(`#ep${j} .d`).textContent = "never sent"; } break; }
+    sent += sc.steps[k].amt;
+    await new Promise(r => setTimeout(r, 900));
+  }
+  note.hidden = false;
+  note.textContent = stoppedAt === null
+    ? `All four payments went through (${fmt(total)}).`
+    : `Stopped at payment ${stoppedAt + 1} of 4. ${fmt(total - sent)} of the ${fmt(total)} the scammer was after never left the account.`;
+  $("#send").disabled = $("#play").disabled = false; busy = false;
+}
+
+/* ---------- guardrails (serve/guardrails.py) ---------- */
+const URL_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|sg|io|ly|me|xyz)\b)/i;
+const PHONE_RE = /\+?\d[\d\s-]{6,}\d/;
+const NUM_RE = /(?:S?\$|SGD|USD)\s?(\d[\d,]*(?:\.\d+)?)/gi;
+const SECRET_RE = /\b(otp|one[- ]time|password|pin)\b/i;
+const NEG_RE = /(never|don't|do not|绝不|不要)/i;
+let guardAmounts = [18500];
+function updateGuardAmounts() { if (lastScore) guardAmounts = [lastScore.x.amt, lastScore.x.amt / 1.33]; renderGuard(); }
+function check(text, amounts, max = 600) {
+  const out = [];
+  const t = text.trim();
+  out.push(["Long enough to be a real message", t.length >= 12]);
+  out.push([`At most ${max} characters (${text.length})`, text.length <= max]);
+  out.push(["No links", !URL_RE.test(text)]);
+  out.push(["No phone numbers", !PHONE_RE.test(text)]);
+  out.push(["Never asks for passwords or one-time codes", !(SECRET_RE.test(text) && !NEG_RE.test(text))]);
+  let bad = null;
+  for (const m of text.matchAll(NUM_RE)) {
+    const v = parseFloat(m[1].replace(/,/g, ""));
+    if (v >= 100 && !amounts.some(a => Math.abs(v - a) <= Math.max(1, 0.01 * a))) { bad = m[0]; break; }
+  }
+  out.push([bad ? `Amounts match the decision (found unexpected ${bad})` : "Amounts match the decision", !bad]);
+  return out;
+}
+const PRESETS = () => {
+  const a = Math.round(guardAmounts[0]).toLocaleString("en-SG");
+  return [
+    `{NAME}, we paused your S$${a} transfer. Government officers never ask you to move money to a safe account. Please hang up; we will call your registered number.`,
+    `{NAME}, we paused your S$${a} transfer. To release it, verify your account at www.demobank-secure.com today.`,
+    `{NAME}, your S$${a} transfer is on hold. Call our officer back on 6123 4567 to release it.`,
+    `{NAME}, we paused your S$${Math.round(guardAmounts[0] * 1.4).toLocaleString("en-SG")} transfer because it looks like a scam. Please wait for our call.`,
+    `{NAME}, to release your S$${a} transfer, reply with the OTP we just sent you.`,
+  ];
+};
+function renderGuard() {
+  const text = $("#gr-text").value;
+  const res = check(text, guardAmounts);
+  const ok = res.every(r => r[1]);
+  const fail = res.find(r => !r[1]);
+  const fallback = lastScore && lastScore.d >= 2 ? customerText(typology(lastScore), lastScore.x.amt, lastScore.decision, "en", "{NAME}")
+    : customerText("gov_impersonation", guardAmounts[0], "HOLD", "en", "{NAME}");
+  $("#gr").innerHTML = res.map(([t, p]) => `<div class="line"><span class="${p ? "ok" : "bad"}">${p ? "✓" : "✕"}</span><span>${esc(t)}</span></div>`).join("") +
+    `<div class="out"><b class="${ok ? "ok" : "bad"}">${ok ? "Passes. The customer sees Granite’s text." : "Rejected (" + esc(fail[0].toLowerCase()) + "). The customer sees the vetted template:"}</b>${ok ? "" : `<div style="margin-top:6px">${esc(fallback)}</div>`}</div>`;
+}
+
+/* ---------- charts (inline SVG, hover tooltips) ---------- */
+const tip = $("#tip");
+function hover(el, html, host) {
+  el.addEventListener("mousemove", e => { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = e.pageX + "px"; tip.style.top = e.pageY + "px"; });
+  el.addEventListener("mouseleave", () => { tip.style.opacity = 0; });
+}
+const NS = "http://www.w3.org/2000/svg";
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+function hbars(host, rows, opts = {}) {
+  const W = 520, rowH = 30, padL = 132, padR = 52, H = rows.length * rowH + 26;
+  const svg = mk("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.aria || "" });
+  const x = v => padL + (W - padL - padR) * v / 100;
+  for (const g of [0, 25, 50, 75, 100]) {
+    mk("line", { x1: x(g), x2: x(g), y1: 0, y2: H - 22, stroke: "var(--line)", "stroke-width": 1 }, svg);
+    const t = mk("text", { x: x(g), y: H - 6, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)", "font-family": "IBM Plex Mono, monospace" }, svg); t.textContent = g + "%";
+  }
+  rows.forEach((r, i) => {
+    const y = i * rowH + 6, h = rowH - 12;
+    const lab = mk("text", { x: padL - 10, y: y + h / 2 + 4, "text-anchor": "end", "font-size": 12.5, fill: r.em ? "var(--ink)" : "var(--ink2)", "font-weight": r.em ? 600 : 400 }, svg); lab.textContent = r.label;
+    const w = Math.max(2, x(r.v) - padL);
+    const bar = mk("path", { d: `M${padL},${y} h${w - 4} q4,0 4,4 v${h - 8} q0,4 -4,4 h-${w - 4} z`, fill: r.em ? "var(--s1)" : "var(--s1)", "fill-opacity": r.em ? 1 : 0.55 }, svg);
+    const v = mk("text", { x: padL + w + 6, y: y + h / 2 + 4, "font-size": 12, fill: "var(--ink)", "font-family": "IBM Plex Mono, monospace" }, svg); v.textContent = r.v.toFixed(1) + "%";
+    const hit = mk("rect", { x: 0, y: y - 4, width: W, height: rowH, fill: "transparent" }, svg);
+    hover(hit, `${esc(r.label)}: ${r.v.toFixed(1)}%${r.note ? " · " + esc(r.note) : ""}`, host);
+  });
+  host.appendChild(svg);
+  if (opts.cap) { const p = document.createElement("p"); p.className = "cap"; p.textContent = opts.cap; host.appendChild(p); }
+}
+
+function lines(host, series, o) {
+  const W = 520, H = 260, pl = 52, pr = 16, pt = 10, pb = 36;
+  const svg = mk("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": o.aria });
+  const lx = v => o.logX ? Math.log10(v) : v, ly = v => o.logY ? Math.log10(v) : v;
+  const [x0, x1] = o.xr.map(lx), [y0, y1] = o.yr.map(ly);
+  const X = v => pl + (W - pl - pr) * (lx(v) - x0) / (x1 - x0);
+  const Y = v => pt + (H - pt - pb) * (1 - (ly(v) - y0) / (y1 - y0));
+  for (const t of o.yt) { mk("line", { x1: pl, x2: W - pr, y1: Y(t), y2: Y(t), stroke: "var(--line)", "stroke-width": 1 }, svg);
+    const e = mk("text", { x: pl - 8, y: Y(t) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)", "font-family": "IBM Plex Mono, monospace" }, svg); e.textContent = t; }
+  for (const t of o.xt) { const e = mk("text", { x: X(t), y: H - pb + 18, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)", "font-family": "IBM Plex Mono, monospace" }, svg); e.textContent = o.xf ? o.xf(t) : t; }
+  if (o.xlabel) { const e = mk("text", { x: (pl + W - pr) / 2, y: H - 4, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, svg); e.textContent = o.xlabel; }
+  if (o.band) { const [a, b, label] = o.band; mk("rect", { x: X(a), y: pt, width: X(b) - X(a), height: H - pt - pb, fill: "var(--accent-soft)" }, svg);
+    const e = mk("text", { x: (X(a) + X(b)) / 2, y: pt + 14, "text-anchor": "middle", "font-size": 11, fill: "var(--ink2)" }, svg); e.textContent = label; }
+  series.forEach(s => {
+    mk("path", { d: s.pts.map((p, i) => (i ? "L" : "M") + X(p[0]) + "," + Y(p[1])).join(""), fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    s.pts.forEach((p, i) => {
+      const last = i === s.pts.length - 1;
+      mk("circle", { cx: X(p[0]), cy: Y(p[1]), r: last ? 4.5 : 3.5, fill: s.color, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      const hit = mk("circle", { cx: X(p[0]), cy: Y(p[1]), r: 12, fill: "transparent" }, svg);
+      hover(hit, `${esc(s.name)} · ${o.tipx(p[0])}: ${o.tipy(p[1])}`, host);
+    });
+    if (s.label) { const lp = s.pts[s.label.at]; const e = mk("text", { x: X(lp[0]) + (s.label.dx || 6), y: Y(lp[1]) + (s.label.dy || -8), "font-size": 11.5, fill: "var(--ink2)", "text-anchor": s.label.anchor || "start" }, svg); e.textContent = s.name; }
+  });
+  const lg = document.createElement("div"); lg.className = "legend";
+  lg.innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join("");
+  host.appendChild(lg); host.appendChild(svg);
+  if (o.cap) { const p = document.createElement("p"); p.className = "cap"; p.textContent = o.cap; host.appendChild(p); }
+  if (o.table) { const d = document.createElement("details"); d.innerHTML = `<summary>Show the numbers</summary><div class="tbl-wrap">${o.table}</div>`; host.appendChild(d); }
+}
+
+function charts() {
+  hbars($("#ch-abl"), [
+    { label: "A payee only", v: 16.0 }, { label: "C coercion only", v: 47.6 }, { label: "B behaviour only", v: 67.2 },
+    { label: "A + B", v: 66.5 }, { label: "A + C", v: 46.8 }, { label: "B + C", v: 87.7 }, { label: "A + B + C", v: 87.9, em: true, note: "deployed" },
+  ], { aria: "Ablation", cap: "Every combination keeps genuine holds at about 0.2%. Payee model A adds about 0.2 points to scam decisions; its main job is the back-office mule flag." });
+  hbars($("#ch-typ"), [
+    { label: "Job / task", v: 94.3 }, { label: "Gov. impersonation", v: 91.7 }, { label: "Investment", v: 85.3 },
+    { label: "E-commerce", v: 61.1 }, { label: "Romance", v: 55.4 },
+  ], { aria: "By typology", cap: "Romance and e-commerce scams carry the weakest signals and are the known weak spots." });
+
+  const nn = [[1, 1099.1], [8, 120.1], [32, 35.76], [128, 12.89], [512, 4.675], [2048, 3.546]];
+  const cpu = [[1, 399.1], [8, 54.98], [32, 18.89], [128, 11.78], [512, 9.725], [2048, 7.18]];
+  const cs = getComputedStyle(document.documentElement);
+  lines($("#ch-nnpa"), [
+    { name: "Telum NNPA (ibm-zdnn-plugin)", color: "var(--s1)", pts: nn },
+    { name: "CPU kernels (plugin hidden)", color: "var(--s2)", pts: cpu },
+  ], { aria: "NNPA vs CPU", logX: true, logY: true, xr: [1, 2048], yr: [2, 2000], yt: [2, 10, 100, 1000], xt: [1, 8, 32, 128, 512, 2048], xlabel: "transfers per accelerator call",
+    band: [256, 2048, "NNPA 2× faster"], tipx: v => "batch " + v, tipy: v => v + " µs/tx",
+    cap: "Below about 256 transfers per call the CPU path is faster, so the accelerator pays off at bank-scale volume. At batch 2048: 3.55 vs 7.18 µs per transfer.",
+    table: `<table><thead><tr><th class="r">Batch</th><th class="r">NNPA µs/tx</th><th class="r">CPU µs/tx</th></tr></thead><tbody>${nn.map((p, i) => `<tr><td class="r">${p[0]}</td><td class="r">${p[1]}</td><td class="r">${cpu[i][1]}</td></tr>`).join("")}</tbody></table>` });
+
+  const p50 = [[500, 58.05], [1000, 77.16], [2020, 59.48], [4020, 34.15]], p99 = [[500, 117.43], [1000, 112.72], [2020, 67.45], [4020, 43.11]];
+  lines($("#ch-lat"), [
+    { name: "p99", color: "var(--s2)", pts: p99 },
+    { name: "p50", color: "var(--s1)", pts: p50 },
+  ], { aria: "Latency", xr: [0, 4500], yr: [0, 130], yt: [0, 40, 80, 120], xt: [500, 1000, 2000, 3000, 4000], xlabel: "sustained transfers per second",
+    tipx: v => v.toLocaleString() + " tx/s", tipy: v => v + " ms",
+    cap: "p99 stays under 120 ms at every sustained load up to 4,020 tx/s. One scorer saturates near 5,200 tx/s on 3 vCPUs.",
+    table: `<table><thead><tr><th class="r">tx/s</th><th class="r">p50 ms</th><th class="r">p99 ms</th></tr></thead><tbody>${p50.map((p, i) => `<tr><td class="r">${p[0].toLocaleString()}</td><td class="r">${p[1]}</td><td class="r">${p99[i][1]}</td></tr>`).join("")}<tr><td class="r">5,222 (max)</td><td class="r">saturated</td><td class="r">saturated</td></tr></tbody></table>` });
+}
+
+/* ---------- wire up ---------- */
+$$("#scen button").forEach(b => b.addEventListener("click", () => choose(b.dataset.s)));
+$("#f-hes").addEventListener("input", e => { $("#hes-v").textContent = (+e.target.value).toFixed(1); });
+$("#form").addEventListener("input", e => { if (e.target.id !== "f-hes" && current !== "custom") { /* editing a scenario turns it into the sandbox */ current = "custom";
+  $$("#scen button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.s === "custom"))); $("#play").hidden = true; } });
+$("#form").addEventListener("submit", async e => { e.preventDefault(); if (busy) return; busy = true; $("#send").disabled = true;
+  $("#episode").hidden = true; $("#epnote").hidden = true; await send(read()); $("#send").disabled = false; busy = false; });
+$("#play").addEventListener("click", playEpisode);
+$("#verify").addEventListener("click", () => hasCrypto && verify());
+$("#tamper").addEventListener("click", () => {
+  if (chain.length < 2) return;
+  const i = Math.max(0, Math.floor(chain.length / 2) - 1);
+  const c = chain[i];
+  c.rec = { ...c.rec, decision: c.rec.decision === "ALLOW" ? "HOLD" : "ALLOW" }; c.tampered = true;
+  drawChain(); $("#vres").innerHTML = `<span class="muted">Record ${i + 1} was edited (decision changed to ${c.rec.decision}) without recomputing its hash. Now verify.</span>`;
+});
+$("#reset").addEventListener("click", () => hasCrypto && seedChain());
+$$("#presets button").forEach(b => b.addEventListener("click", () => { $("#gr-text").value = PRESETS()[+b.dataset.p]; renderGuard(); }));
+$("#gr-text").addEventListener("input", renderGuard);
+
+drawLadder();
+choose("tan");
+$("#gr-text").value = PRESETS()[1];
+renderGuard();
+charts();
+if (hasCrypto) seedChain(); else { $("#vres").textContent = "This browser does not expose Web Crypto, so the hash chain demo is unavailable."; $("#verify").disabled = $("#tamper").disabled = $("#reset").disabled = true; }
+})();
+</script>
+</body>
+</html>
