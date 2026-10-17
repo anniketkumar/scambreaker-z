@@ -1,0 +1,11 @@
+$ lsblk -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT
+NAME         TYPE   SIZE FSTYPE      MOUNTPOINT
+loop0        loop    48M squashfs    /snap/core18/2567
+loop1        loop  48.1M squashfs    /snap/core18/2669
+loop2        loop  46.2M squashfs    /snap/snapd/17887
+loop3        loop  40.5M squashfs    /snap/snapd/28258
+loop4        loop   482K iso9660     
+loop5        loop    16G crypto_LUKS 
+└─securedata crypt   16G ext4        /secure
+dasda        disk    50G             
+└─dasda1     part    50G ext4        /

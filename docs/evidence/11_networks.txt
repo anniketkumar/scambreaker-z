@@ -1,0 +1,8 @@
+$ sh -c sudo docker network inspect scambreaker_core --format 'core network internal={{.Internal}}'; sudo docker network ls
+core network internal=true
+NETWORK ID     NAME               DRIVER    SCOPE
+d95babdd8c0d   bridge             bridge    local
+18b37dd25a3a   host               host      local
+642bae2320fc   none               null      local
+f13d65a3a45e   scambreaker_core   bridge    local
+e66bb86ac5c5   scambreaker_edge   bridge    local

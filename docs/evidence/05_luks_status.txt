@@ -1,0 +1,12 @@
+$ sudo cryptsetup status securedata
+/dev/mapper/securedata is active and is in use.
+  type:    LUKS2
+  cipher:  aes-xts-plain64
+  keysize: 512 bits
+  key location: keyring
+  device:  /dev/loop5
+  loop:    /var/lib/scambreaker/secure.img
+  sector size:  4096
+  offset:  32768 sectors
+  size:    33521664 sectors
+  mode:    read/write

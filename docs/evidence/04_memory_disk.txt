@@ -1,0 +1,7 @@
+$ sh -c free -h; df -h / /secure
+               total        used        free      shared  buff/cache   available
+Mem:           7.8Gi       4.5Gi        72Mi       1.6Mi       3.4Gi       3.4Gi
+Swap:          8.0Gi       1.9Gi       6.1Gi
+Filesystem              Size  Used Avail Use% Mounted on
+/dev/dasda1              50G   37G   11G  79% /
+/dev/mapper/securedata   16G  4.8G   11G  33% /secure

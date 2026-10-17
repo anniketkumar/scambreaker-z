@@ -1,0 +1,2 @@
+$ uname -a
+Linux scambreaker 6.8.0-147-generic #147-Ubuntu SMP Thu Sep 24 10:59:43 UTC 2026 s390x s390x s390x GNU/Linux

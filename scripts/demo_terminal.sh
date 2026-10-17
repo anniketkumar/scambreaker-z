@@ -6,6 +6,6 @@ type_run "uname -m && grep -m1 '^processor 0' /proc/cpuinfo | sed 's/.*machine/m
 type_run "grep -o -w nnpa /proc/cpuinfo | head -1   # Telum on-chip AI accelerator facility"
 type_run "docker compose ps --format 'table {{.Service}}\t{{.Status}}'"
 type_run "sudo cryptsetup status securedata | grep -E 'type|cipher|keysize|device'"
-type_run "grep -A2 'xts(aes)' /proc/crypto | grep -m1 driver   # dm-crypt runs on CPACF"
+type_run "grep -A2 'driver *: xts-aes-s390' /proc/crypto   # CPACF driver: highest priority, used by dm-crypt"
 type_run "docker exec scambreaker-genai-1 python -c \"import socket; socket.create_connection(('1.1.1.1',443),3)\" 2>&1 | tail -1   # AI container: no internet"
 type_run "docker exec scambreaker-web-1 python -m scambreaker.security.audit verify /secure/work/audit/decisions.jsonl"

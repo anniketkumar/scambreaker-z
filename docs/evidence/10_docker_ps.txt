@@ -1,0 +1,8 @@
+$ sudo docker ps --format table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}
+NAMES                    IMAGE                    STATUS          PORTS
+scambreaker-web-1        scambreaker-z:latest     Up 13 minutes   3000/tcp, 5000/tcp, 8888/tcp, 38888/tcp, 0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+scambreaker-genai-1      scambreaker-z:latest     Up 13 minutes   3000/tcp, 5000/tcp, 8888/tcp, 38888/tcp
+scambreaker-replayer-1   1c6a122fe942             Up 2 hours      3000/tcp, 5000/tcp, 8888/tcp, 38888/tcp
+scambreaker-scorer-1     1c6a122fe942             Up 2 hours      3000/tcp, 5000/tcp, 8888/tcp, 38888/tcp
+scambreaker-redis-1      redis:7.2-alpine         Up 2 hours      6379/tcp
+scambreaker-llm-1        scambreaker-llm:latest   Up 2 hours      

@@ -1,0 +1,2 @@
+$ sudo docker exec scambreaker-web-1 python -m scambreaker.security.audit verify /secure/work/audit/decisions.jsonl
+OK - 256,381 records, hash chain intact

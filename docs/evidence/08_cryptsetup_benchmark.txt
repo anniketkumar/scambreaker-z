@@ -1,0 +1,4 @@
+$ sudo cryptsetup benchmark -c aes-xts -s 512
+# Tests are approximate using memory only (no storage IO).
+# Algorithm |       Key |      Encryption |      Decryption
+    aes-xts        512b      5050.8 MiB/s      5077.8 MiB/s

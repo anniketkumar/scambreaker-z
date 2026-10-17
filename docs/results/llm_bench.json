@@ -1,0 +1,14 @@
+{
+  "note": "IBM Granite 3.3 2B Instruct (big-endian GGUF) on the LinuxONE Community Cloud VM (IBM z17, 3 vCPUs), measured 2026-10-17 ~11:00 UTC with no other model loaded. Contended re-runs while the live server held a second copy in RAM were discarded.",
+  "llama.cpp b6754 built for s390x with VXE (llm/Dockerfile), llama-bench -t 3": {
+    "Q8_0": {"prompt_tokens_per_s": 13.22, "gen_tokens_per_s": 5.04},
+    "Q4_K_M": {"prompt_tokens_per_s": 10.48, "gen_tokens_per_s": 4.51},
+    "system_info": "CPU : VXE = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1"
+  },
+  "llama_cpp_python 0.3.36 from the L1CC ML image (no VXE in CPU backend; zDNN backend present)": {
+    "Q8_0": {"gen_tokens_per_s": 1.35, "gen_tokens_per_s_with_zdnn_offload": 1.38},
+    "Q4_K_M": {"gen_tokens_per_s": 1.22, "gen_tokens_per_s_with_zdnn_offload": 1.24},
+    "system_info": "zDNN : NNPA = 1 | NNPA_PARMBLKFORMAT_0 = 1 | NNPA_PARMBLKFORMAT_1 = 1 | CPU : LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1"
+  },
+  "speedup_gen_Q8_0": 3.7
+}

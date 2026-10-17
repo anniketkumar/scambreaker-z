@@ -1,0 +1,2 @@
+$ docker compose logs llm | grep system_info
+llm-1  | system_info: n_threads = 3 (n_threads_batch = 3) / 3 | CPU : VXE = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 

@@ -1,0 +1,8 @@
+$ sudo docker stats --no-stream
+CONTAINER ID   NAME                     CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+3e84ba75edbc   scambreaker-web-1        0.17%     17.34MiB / 7.821GiB   0.22%     14.4MB / 15.1MB   289MB / 30.1MB    5
+4fc67bf2d911   scambreaker-genai-1      0.06%     9.68MiB / 7.821GiB    0.12%     358kB / 1.19MB    17MB / 34.1MB     1
+f6700357cd47   scambreaker-replayer-1   0.03%     43.36MiB / 7.821GiB   0.54%     314MB / 3.69GB    942MB / 22.8MB    1
+b9a0ed25a307   scambreaker-scorer-1     100.84%   3.107GiB / 7.821GiB   39.73%    3.26GB / 526MB    6.05GB / 4.17GB   10
+0e6e50c32e7d   scambreaker-redis-1      0.20%     80.05MiB / 7.821GiB   1.00%     4.41GB / 3.83GB   90.1MB / 174MB    5
+8ee913bfa0f0   scambreaker-llm-1        0.00%     1.103GiB / 7.821GiB   14.11%    518kB / 1.83MB    17.5GB / 644MB    8

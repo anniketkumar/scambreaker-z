@@ -1,0 +1,40 @@
+{
+  "steps": [
+    {
+      "target_tps": 500.0,
+      "achieved_tps": 500.0,
+      "p50_ms": 58.05,
+      "p99_ms": 117.43,
+      "batch_ms": 10.23
+    },
+    {
+      "target_tps": 1000.0,
+      "achieved_tps": 1000.0,
+      "p50_ms": 77.16,
+      "p99_ms": 112.72,
+      "batch_ms": 5.5
+    },
+    {
+      "target_tps": 2000.0,
+      "achieved_tps": 2020.0,
+      "p50_ms": 59.48,
+      "p99_ms": 67.45,
+      "batch_ms": 6.07
+    },
+    {
+      "target_tps": 4000.0,
+      "achieved_tps": 4020.0,
+      "p50_ms": 34.15,
+      "p99_ms": 43.11,
+      "batch_ms": 6.54
+    },
+    {
+      "target_tps": "max",
+      "achieved_tps": 5222.4,
+      "p50_ms": 12139.9,
+      "p99_ms": 12500.26,
+      "batch_ms": 21.92
+    }
+  ],
+  "hold_s": 30.0
+}
