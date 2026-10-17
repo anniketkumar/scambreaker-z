@@ -147,6 +147,7 @@ For local development without LinuxONE: `python -m scambreaker.serve.allinone` r
   - [Chart.js](https://github.com/chartjs/Chart.js)
   - [Matplotlib](https://github.com/matplotlib/matplotlib)
   - [IBM Plex](https://github.com/IBM/plex) (OFL)
+  - [Mermaid](https://github.com/mermaid-js/mermaid) (architecture diagram)
 - **Video tooling:**
   - [Playwright](https://github.com/microsoft/playwright-python)
   - [edge-tts](https://github.com/rany2/edge-tts)
