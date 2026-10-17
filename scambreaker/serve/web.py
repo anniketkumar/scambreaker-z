@@ -24,6 +24,8 @@ ROOT = config.ROOT
 app = Flask(__name__, template_folder=str(ROOT / "web" / "templates"), static_folder=str(ROOT / "web" / "static"))
 bus = make_bus()
 DEMO_TOKEN = os.environ.get("SB_DEMO_TOKEN", "")
+# replay speed is a team-only control: a visitor clicking "Max" or "Pause" would degrade the demo for everyone
+ADMIN_TOKEN = os.environ.get("SB_ADMIN_TOKEN", "") or DEMO_TOKEN
 SCENARIOS = {json.loads(p.read_text())["slug"]: json.loads(p.read_text())
              for p in sorted(config.SCENARIO_DIR.glob("*.json"))}
 
@@ -81,10 +83,10 @@ class Hub:
 hub = Hub()
 
 
-def _authorised() -> bool:
-    if not DEMO_TOKEN:
+def _authorised(token: str = DEMO_TOKEN) -> bool:
+    if not token:
         return True
-    return request.headers.get("X-Demo-Token") == DEMO_TOKEN or request.args.get("token") == DEMO_TOKEN
+    return request.headers.get("X-Demo-Token") == token or request.args.get("token") == token
 
 
 @app.get("/")
@@ -147,7 +149,8 @@ def scenario(slug: str):
         fmt = step["fmt"]
         msgs.append({"id": f"{slug}-{run_id}-{k + 1}", "t": None, "offset_min": step["offset_min"],
                      "src": persona["id"], "dst": payee, "amt": step["amount_sgd"] / config.SGD_PER_USD,
-                     "fmt": fmt, "same_bank": 0, "cross_cur": 1 if fmt == "Bitcoin" else 0, "pool": 1,
+                     # cross_cur 0: AMLworld's Bitcoin transfers are same-currency, as in the training data
+                     "fmt": fmt, "same_bank": 0, "cross_cur": 0, "pool": 1,
                      "session": step["session"], "scenario": slug, "step": k + 1, "steps": len(sc["steps"]),
                      "payee_name": sc["payee_name"],
                      "truth": {"is_scam": sc["truth_is_scam"], "typ": sc.get("typology")}})
@@ -178,7 +181,7 @@ def scenario(slug: str):
 
 @app.post("/api/replay")
 def replay():
-    if not _authorised():
+    if not _authorised(ADMIN_TOKEN):
         abort(403)
     ctl = bus.get("replay:control") or {"tps": 1500, "paused": False}
     body = request.get_json(silent=True) or {}

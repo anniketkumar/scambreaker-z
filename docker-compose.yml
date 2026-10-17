@@ -44,7 +44,7 @@ services:
     image: scambreaker-llm:latest
     build: ./llm
     user: "1000:1000"
-    command: ["-m", "/models/${LLM_MODEL:-granite-3.3-2b-instruct-be.Q4_K_M.gguf}", "-c", "4096", "-t", "${LLM_THREADS:-3}",
+    command: ["-m", "/models/${LLM_MODEL:-granite-3.3-2b-instruct-be.Q8_0.gguf}", "-c", "4096", "-t", "${LLM_THREADS:-3}",
               "--host", "0.0.0.0", "--port", "8081", "--parallel", "1"]
     volumes:
       - /secure/work/llm:/models:ro
@@ -68,6 +68,7 @@ services:
     environment:
       SB_BUS: redis://redis:6379/0
       SB_DEMO_TOKEN: ${SB_DEMO_TOKEN:-}
+      SB_ADMIN_TOKEN: ${SB_ADMIN_TOKEN:-}
     ports: ["8080:8080"]
     networks: [core, edge]
     depends_on: [redis]

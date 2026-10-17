@@ -20,7 +20,7 @@ Preparation (`scambreaker/data/prep.py`):
 
 Banks do not publish victim-side scam data, so APP-scam episodes are simulated and injected into the real AMLworld stream (`scambreaker/data/inject.py`, fixed seed):
 
-- **Victims** are real AMLworld accounts with retail-like activity (3–200 digital outgoing transfers) that are never involved in laundering. Each victim is used for at most one episode, and victims in different splits are disjoint.
+- **Victims** are real AMLworld accounts with retail-like activity (3–300 digital outgoing transfers) that are never involved in laundering. Each victim is used for at most one episode, and victims in different splits are disjoint.
 - **Payees** are real AMLworld accounts that receive laundering transfers in the same period (money mules), so the payee-side signal comes from real data.
 - **Five typologies**, with shapes loosely following Singapore Police Force descriptions:
 

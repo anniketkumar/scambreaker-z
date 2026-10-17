@@ -11,7 +11,15 @@
     "3932": "IBM z16 / LinuxONE Rockhopper 4", "8561": "IBM z15 / LinuxONE III", "8562": "IBM z15 T02" };
 
   const state = { feed: [], cases: new Map(), queue: [], selected: null, token: localStorage.getItem("sb_token") || "",
-    dirtyFeed: false, dirtySel: false, proof: null };
+    admin: localStorage.getItem("sb_admin") || "", dirtyFeed: false, dirtySel: false, proof: null, auditRecords: 0 };
+
+  // one-click demo links: /?code=<demo code> stores the code, then drops it from the address bar
+  const urlCode = new URLSearchParams(location.search).get("code");
+  if (urlCode) {
+    state.token = urlCode;
+    try { localStorage.setItem("sb_token", urlCode); } catch (_) { /* private window: keep it for this visit */ }
+    history.replaceState(null, "", location.pathname);
+  }
 
   // ------------------------------------------------------------------ stream
   function connect() {
@@ -236,19 +244,24 @@
     set("#k-scam", m.scam_usd_seen ? pct(m.scam_usd_held / m.scam_usd_seen, 0) : "–");
     set("#k-scam-s", `${m.scam_held || 0}/${m.scam_seen || 0} simulated scam payments · ${money(m.scam_usd_held)}`);
     set("#k-legit", m.legit_seen ? pct(m.legit_held / m.legit_seen, 2) : "–");
-    set("#k-audit", (m.audit_records || 0).toLocaleString("en-US"));
+    state.auditRecords = m.audit_records || 0;
+    set("#k-audit", state.auditRecords.toLocaleString("en-US"));
     if (charts.length === 2) { pushPoint(charts[0], m.p99_ms); pushPoint(charts[1], m.tps); }
   }
 
   // --------------------------------------------------------------- controls
   async function post(url, body) {
+    // replay speed is a team-only control; scenarios take the public demo code
+    const admin = url.startsWith("/api/replay");
     const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) };
-    if (state.token) opts.headers["X-Demo-Token"] = state.token;
+    const have = admin ? state.admin : state.token;
+    if (have) opts.headers["X-Demo-Token"] = have;
     let r = await fetch(url, opts);
     if (r.status === 403) {
-      const t = prompt("Demo token");
+      const t = prompt(admin ? "Replay speed is fixed while judging is on. Team admin code:" : "Demo code");
       if (!t) return null;
-      state.token = t; localStorage.setItem("sb_token", t);
+      if (admin) state.admin = t; else state.token = t;
+      try { localStorage.setItem(admin ? "sb_admin" : "sb_token", t); } catch (_) { /* keep it for this visit */ }
       opts.headers["X-Demo-Token"] = t;
       r = await fetch(url, opts);
     }
@@ -304,7 +317,7 @@
       check(mt ? true : null, "Processor", esc(mt ? `${MACHINES[mt[1]] || "machine type " + mt[1]}\n${p.cpu.processor0}` : "not reported")),
       check(!!p.cpu?.nnpa_flag, "Telum on-chip AI accelerator (NNPA facility)", "CPU feature flag 'nnpa' in /proc/cpuinfo: " + (p.cpu?.nnpa_flag ? "present" : "absent")),
       check(zlibs.some((l) => /libzdnn/.test(l)) && zlibs.some((l) => /_z_ops/.test(l)), "Scorer has the IBM zDNN libraries loaded", esc(zlibs.join(", ") || sc.accel_probe_error || "none found") + `\nTensorFlow ${esc(sc.tf_version || "")} · ibm-zdnn-plugin kernels`),
-      check(speed ? Number(speed) > 1 : null, "LSTM scoring: zDNN plugin vs plain CPU kernels", speed ? `batch ${ab.batch} · with zDNN ${ab.nnpa_us_per_tx} µs/transfer · without ${ab.cpu_us_per_tx} µs/transfer · ${speed}x faster` : "A/B benchmark not run yet"),
+      check(speed ? Number(speed) > 1 : null, "LSTM scoring: zDNN plugin vs plain CPU kernels", speed ? `batch ${ab.batch} · with zDNN ${ab.nnpa_us_per_tx} µs/transfer · without ${ab.cpu_us_per_tx} µs/transfer · ${speed}x faster\nthe gain is for bank-scale batches; at this demo's load (a few to a few dozen transfers per call) plain CPU kernels are faster` : "A/B benchmark not run yet"),
       check(g.mode === "granite", "IBM Granite running on this server", esc(`${g.model || "–"} · ${g.server || "llama.cpp"}${g.build ? " (" + g.build + ")" : ""} · ${g.tokens_per_s ?? "–"} tok/s`)),
       check(g.egress_blocked === true, "AI containers cannot reach the internet", "outbound TCP 1.1.1.1:443 from the genai container: " + (g.egress_blocked ? "blocked" : g.egress_blocked === false ? "OPEN" : "not tested")),
       check(h.luks ? true : null, "Data at rest encrypted (LUKS2 / dm-crypt)", esc(h.luks ? `${h.luks.type} · ${h.luks.cipher} · ${h.luks.keysize} bits · ${h.luks.device} → ${h.luks.mount}` : "host report not found")),
@@ -316,7 +329,7 @@
   }
 
   async function verifyAudit() {
-    $("#audit-res").textContent = "verifying…";
+    $("#audit-res").textContent = state.auditRecords ? `verifying all ${state.auditRecords.toLocaleString("en-US")} records…` : "verifying…";
     const r = await post("/api/audit/verify");
     $("#audit-res").textContent = r ? (r.ok ? `✔ intact · ${r.records.toLocaleString("en-US")} records · ${r.ms} ms` : `✖ broken at line ${r.first_bad_line}`) : "error";
   }

@@ -31,7 +31,7 @@
       "id": "demo_tan",
       "visual": "clip:tan",
       "min_s": 3,
-      "say": "Mrs Tan is seventy-two. A caller posing as a government officer tells her to move eighteen thousand five hundred dollars to a safe account. {tan_decision} in {tan_ms} milliseconds. IBM Granite, running on the same server, explains why in English and in Chinese, and alerts her daughter."
+      "say": "Madam Tan is seventy-two. A caller posing as a government officer tells her to move eighteen thousand five hundred dollars to a safe account. {tan_decision} in {tan_ms} milliseconds. IBM Granite, running on the same server, explains why in English and in Chinese, and alerts her daughter."
     },
     {
       "id": "demo_case",

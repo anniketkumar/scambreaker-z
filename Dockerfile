@@ -1,6 +1,7 @@
 # ScamBreaker-Z application image for IBM LinuxONE (s390x).
 # Built on the LinuxONE Community Cloud ML image, which already ships TensorFlow with the
-# IBM zDNN plugin (Telum NNPA), XGBoost, scikit-learn and llama.cpp built with zDNN.
+# IBM zDNN plugin (Telum NNPA), XGBoost and scikit-learn. (The image's llama-cpp-python has no
+# VXE; Granite is served by our own llama.cpp build with VXE, see llm/Dockerfile.)
 ARG BASE=registry.linuxone.cloud.marist.edu/l1cc/jupyterlab-image-s390x:latest
 FROM ${BASE}
 

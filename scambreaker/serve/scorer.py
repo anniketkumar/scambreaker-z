@@ -199,6 +199,9 @@ def run(argv: list[str] | None = None) -> None:
             msgs = []
             for _, m in items:
                 if m.get("ctl") == "reset":
+                    # the replay wrapped around: events read before the reset belong to the finished loop and
+                    # must not leak into the rebuilt state or move the replay clock back to the last day
+                    msgs = []
                     proof["status"] = "warming"
                     bus.set("proof:scorer", proof)
                     sc.warm_up()

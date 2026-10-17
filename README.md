@@ -4,16 +4,16 @@
 
 Theme 1, *Real-time AI for Critical Decisions* (Detect. Decide. Respond.)
 
-**Links:** 🎥 Demo video (link added after upload) · 🖥️ Live prototype: <http://148.100.76.147:8080> · [Architecture](docs/architecture.md) · [Data card](docs/data_card.md) · [Results](#results) · [IBM Z evidence](#how-it-uses-ibm-z-and-linuxone)
+**Links:** 🎥 Demo video (link added after upload) · 🖥️ Live prototype: <http://148.100.76.147:8080/?code=kLuVhFogDDzi> · [Architecture](docs/architecture.md) ([PNG](docs/architecture.png)) · [Data card](docs/data_card.md) · [Results](#results) · [IBM Z evidence](#how-it-uses-ibm-z-and-linuxone) · [Screenshots](docs/evidence/screenshots/)
 
-**Try the live prototype:** open <http://148.100.76.147:8080> and click a scenario in the bar at the bottom. It asks once for the demo code `kLuVhFogDDzi`. The decision appears instantly; IBM Granite's messages then follow one by one over about 3 minutes on the VM's 3 vCPUs.
+**Try the live prototype:** open <http://148.100.76.147:8080/?code=kLuVhFogDDzi> (the link fills in the demo code, `kLuVhFogDDzi`) and click a scenario in the bar at the bottom. The decision appears instantly; IBM Granite's messages then follow one by one over about 3 minutes on the VM's 3 vCPUs. The public demo replays AMLworld at 150 transfers a second so it can run until results day; the replay-speed buttons are for the team.
 
 ---
 
 ## The problem
 
-- **Singapore lost S$913.1M to scams in 2025** across 37,308 scam cases ([SPF Annual Scams & Cybercrime Brief 2025](https://www.police.gov.sg/Media-Room/Statistics)).
-- **In 2024, 82.4% of scam cases were self-effected:** the victim was manipulated into sending the money themself ([SPF, 2024 brief](https://www.police.gov.sg/media-hub/police-life/2025/02/five-things-you-should-know-about-the-annual-scams-and-cybercrime-brief-2024)). Fraud models built to catch stolen cards and passwords see a genuine customer and stay silent.
+- **Singapore lost S$913.1M to scams in 2025** across 37,308 scam cases ([SPF, Feb 2026](https://www.police.gov.sg/media-hub/police-life/2026/02/scams-and-cybercrime-fell-by-almost-a-quarter-in-2025); [SPF infographic](https://www.police.gov.sg/-/media/SPF/Media-Room/Statistics/Annual-Scams-and-Cybercrime-Brief-2025-Infographic/Infographic-for-ASCB-2025.pdf)).
+- **In 2025, 81.8% of scams were self-effected (82.4% in 2024):** the victim was manipulated into sending the money themself ([SPF, Feb 2026](https://www.police.gov.sg/media-hub/police-life/2026/02/scams-and-cybercrime-fell-by-almost-a-quarter-in-2025)). Fraud models built to catch stolen cards and passwords see a genuine customer and stay silent.
 - **Today's backstop is a police restriction order that freezes everything.** Only 12 were issued by Feb 2026. Graduated limits were shelved because banks said they need "significant system changes" ([MHA, 4 Mar 2026](https://www.mha.gov.sg/media-room/newsroom/restriction-orders-issued-under-protection-from-scams-act-2025/)).
 - **Globally, about US$442B is lost to scams a year** ([GASA / Feedzai, Global State of Scams 2025](https://www.feedzai.com/global-state-of-scams-report-2025/)).
 
@@ -38,14 +38,18 @@ Everything below was measured on our LinuxONE Community Cloud VM: an **IBM z17**
 
 | Capability | How ScamBreaker-Z uses it | Evidence |
 |---|---|---|
-| **Telum on-chip AI accelerator (NNPA)** | The behaviour LSTM runs through TensorFlow with IBM's `ibm-zdnn-plugin` (zDNN kernels). | Same model, same inputs: **3.55 µs vs 7.18 µs per transfer at batch 2048 (2.0×)** and 4.67 vs 9.72 µs at batch 512 (2.1×). On tiny batches the plain CPU kernels win, so we score in micro-batches. A/B by hiding the plugin; `libzdnn.so.0` and `_z_ops.so` are verified mapped in the serving process. [chart](docs/results/nnpa_vs_cpu.png) |
+| **Telum on-chip AI accelerator (NNPA)** | The behaviour LSTM runs through TensorFlow with IBM's `ibm-zdnn-plugin` (zDNN kernels). | Same model, same inputs: **3.55 µs vs 7.18 µs per transfer at batch 2048 (2.0×)** and 4.67 vs 9.72 µs at batch 512 (2.1×). The gain is for bank-scale batches: at 128 transfers per call or fewer, the plain CPU kernels are as fast or faster, and our live demo's calls are that small (a few to a few dozen transfers), so the demo itself does not run faster on the accelerator. A/B by hiding the plugin; `libzdnn.so.0` and `_z_ops.so` are verified mapped in the serving process. [chart](docs/results/nnpa_vs_cpu.png) |
 | **IBM Z vector extensions (VXE)** | IBM Granite runs in a llama.cpp server we built for s390x with VXE enabled. | **5.0 tokens/s vs 1.35 tokens/s** for the prebuilt image's build without VXE (3.7×), for Granite 3.3 2B Q8_0 (big-endian GGUF). |
 | **CPACF crypto + encryption at rest** | All data, models and the audit trail live on a **LUKS2 volume (AES-XTS, 512-bit key)**. The kernel uses the `xts-aes-s390` driver, i.e. the CPACF crypto unit. | `cryptsetup status`, `/proc/crypto` ([evidence](docs/evidence/)) |
 | **Containers + isolation** | Docker Compose with six services. The AI services sit on an `internal` network **with no route to the internet**, run as non-root with all capabilities dropped and `no-new-privileges`. | Live check: an outbound connection from the Granite container fails ([evidence](docs/evidence/)) |
 | **Tamper-evident audit** | Every non-ALLOW decision is appended to a SHA-256 hash-chained log; `verify` detects any edit. | Live "Platform proof" panel → *Verify hash chain now* |
-| **Throughput and latency** | A point-in-time feature engine and the models in one stateful scorer, fed by Redis Streams. | One scorer process sustains **4,020 transfers/s at p99 43 ms** (bus to decision) and saturates near 5,200/s ([chart](docs/results/e2e.png)). The feature engine processes about 60K events/s; full training takes 203 s on 3 vCPUs. |
+| **Throughput and latency** | A point-in-time feature engine and the models in one stateful scorer, fed by Redis Streams. | One scorer process keeps p99 under 120 ms (bus to decision) at every sustained load we tested, from 500 to **4,020 transfers/s (p99 43 ms)**, and saturates near 5,200/s ([chart](docs/results/e2e.png)). Latency falls as load rises because micro-batches fill faster. The feature engine processes about 60K events/s; full training takes 203 s on 3 vCPUs. |
 
 The console's **Platform proof** panel recomputes these facts live on the server (architecture, NNPA flag, loaded zDNN libraries, LUKS/CPACF, egress, audit chain). Nothing is hard-coded.
+
+![Platform proof panel, measured live on the LinuxONE VM](docs/evidence/screenshots/02_platform_proof.png)
+
+More screenshots: [LinuxONE portal](docs/evidence/screenshots/01_l1cc_portal.png) · [live console](docs/evidence/screenshots/03_console_live.png) · [terminal on the VM: s390x, z17, nnpa, containers](docs/evidence/screenshots/05_vm_terminal_cpu.png) · [LUKS2, CPACF, no egress, audit chain](docs/evidence/screenshots/04_vm_terminal.png)
 
 ## Results
 
@@ -151,7 +155,7 @@ For local development without LinuxONE: `python -m scambreaker.serve.allinone` r
 
 ## Mandatory labs
 
-Both IBM Z Datathon labs were run on our LinuxONE VM in the official image: *Predictive AI hybrid / multi-model* (Fraud LSTM, Churn with scikit-learn + PyTorch, Digit classification) and *Predictive + Generative AI* (Loan approval with XGBoost + Granite RAG). The executed notebooks and their HTML exports are in [`docs/evidence/labs/`](docs/evidence/labs/).
+Both IBM Z Datathon labs were run on our LinuxONE VM in the official image: *Predictive AI hybrid / multi-model* (Fraud LSTM, Churn with scikit-learn + PyTorch, Digit classification) and *Predictive + Generative AI* (Loan approval with XGBoost + Granite RAG). The executed notebooks and their HTML exports are in [`docs/evidence/labs/`](docs/evidence/labs/). A [platform-check notebook](docs/evidence/labs/00_platform_check_executed.ipynb), run in the same image on the same VM, prints `s390x`, machine type 9175 (IBM z17), the `nnpa` facility, TensorFlow 2.18.1 and ibm-zdnn-plugin 2.3.0.
 
 ## Team Swaggers
 
