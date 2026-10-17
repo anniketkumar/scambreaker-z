@@ -14,7 +14,7 @@ flowchart LR
       B[B · behaviour LSTM<br/>TensorFlow + ibm-zdnn-plugin → NNPA]
       C[C · coercion<br/>logistic regression]
       F[stacker + friction ladder<br/>ALLOW · NUDGE · HOLD · BLOCK]
-      G[genai worker<br/>IBM Granite 3.3 2B · llama.cpp zDNN build<br/>BM25 RAG over policy + typologies]
+      G[genai worker + llama.cpp server<br/>IBM Granite 3.3 2B · s390x VXE build<br/>BM25 RAG over policy + typologies]
     end
     V[(/secure · LUKS2 AES-XTS-512<br/>xts-aes-s390 → CPACF<br/>data · models · audit chain)]
   end

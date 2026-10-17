@@ -6,6 +6,8 @@ Theme 1, *Real-time AI for Critical Decisions* (Detect. Decide. Respond.)
 
 **Links:** 🎥 Demo video (link added after upload) · 🖥️ Live prototype: <http://148.100.76.147:8080> · [Architecture](docs/architecture.md) · [Data card](docs/data_card.md) · [Results](#results) · [IBM Z evidence](#how-it-uses-ibm-z-and-linuxone)
 
+**Try the live prototype:** open <http://148.100.76.147:8080> and click a scenario in the bar at the bottom. It asks once for the demo code `kLuVhFogDDzi`. The decision appears instantly; IBM Granite's messages then follow one by one over about 3 minutes on the VM's 3 vCPUs.
+
 ---
 
 ## The problem
