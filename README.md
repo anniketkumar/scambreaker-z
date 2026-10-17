@@ -4,7 +4,7 @@
 
 Theme 1, *Real-time AI for Critical Decisions* (Detect. Decide. Respond.)
 
-**Links:** 🎥 Demo video (link added after upload) · 🖥️ Live prototype: <http://148.100.76.147:8080/?code=kLuVhFogDDzi> · [Architecture](docs/architecture.md) ([PNG](docs/architecture.png)) · [Data card](docs/data_card.md) · [Results](#results) · [IBM Z evidence](#how-it-uses-ibm-z-and-linuxone) · [Screenshots](docs/evidence/screenshots/)
+**Links:** 🎥 Demo video (link added after upload) · 🖥️ Live prototype: <http://148.100.76.147:8080/?code=kLuVhFogDDzi> · 🧭 [Interactive walkthrough](https://anniketkumar.github.io/scambreaker-z/prototype.html) · [Architecture](docs/architecture.md) ([PNG](docs/architecture.png)) · [Data card](docs/data_card.md) · [Results](#results) · [IBM Z evidence](#how-it-uses-ibm-z-and-linuxone) · [Screenshots](docs/evidence/screenshots/)
 
 **Try the live prototype:** open <http://148.100.76.147:8080/?code=kLuVhFogDDzi> (the link fills in the demo code, `kLuVhFogDDzi`) and click a scenario in the bar at the bottom. The decision appears instantly; IBM Granite's messages then follow one by one over about 3 minutes on the VM's 3 vCPUs. The public demo replays AMLworld at 150 transfers a second so it can run until results day; the replay-speed buttons are for the team.
 
