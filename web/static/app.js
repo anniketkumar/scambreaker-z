@@ -191,21 +191,27 @@
   }
 
   // ----------------------------------------------------------------- metrics
-  let chart;
-  function initChart() {
-    const ctx = $("#latchart");
-    chart = new Chart(ctx, {
-      data: { labels: [], datasets: [
-        { type: "line", label: "p50 ms", data: [], borderColor: "#4589ff", borderWidth: 2, pointRadius: 0, tension: .3, yAxisID: "y" },
-        { type: "line", label: "p99 ms", data: [], borderColor: "#f1c21b", borderWidth: 2, pointRadius: 0, tension: .3, yAxisID: "y" },
-        { type: "bar", label: "tx/s", data: [], backgroundColor: "rgba(61,219,217,.18)", yAxisID: "y2" },
-      ] },
+  const charts = [];
+  function lineChart(el) {
+    const c = new Chart(el, {
+      type: "line",
+      data: { labels: [], datasets: [{ data: [], borderColor: "#3987e5", backgroundColor: "rgba(57,135,229,.10)",
+        borderWidth: 2, pointRadius: 0, tension: .3, fill: true, borderCapStyle: "round", borderJoinStyle: "round" }] },
       options: { animation: false, maintainAspectRatio: false, responsive: true,
-        plugins: { legend: { labels: { color: "#c1c7d0", boxWidth: 10, font: { family: "IBM Plex Sans", size: 11 } } } },
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false }, tooltip: { displayColors: false } },
         scales: { x: { display: false },
-          y: { position: "left", title: { display: true, text: "latency ms", color: "#8d96a5" }, ticks: { color: "#8d96a5" }, grid: { color: "#1d2229" }, beginAtZero: true },
-          y2: { position: "right", title: { display: true, text: "tx/s", color: "#8d96a5" }, ticks: { color: "#8d96a5" }, grid: { display: false }, beginAtZero: true } } },
+          y: { beginAtZero: true, border: { color: "#383835" }, grid: { color: "#262b33" },
+               ticks: { color: "#8d96a5", font: { family: "IBM Plex Mono", size: 10 }, maxTicksLimit: 4 } } } },
     });
+    charts.push(c);
+    return c;
+  }
+  function initChart() { lineChart($("#latchart")); lineChart($("#tpschart")); }
+  function pushPoint(c, v) {
+    c.data.labels.push(""); c.data.datasets[0].data.push(v);
+    if (c.data.labels.length > 90) { c.data.labels.shift(); c.data.datasets[0].data.shift(); }
+    c.update("none");
   }
 
   function onMetrics(m) {
@@ -225,12 +231,7 @@
     set("#k-scam-s", `${m.scam_held || 0}/${m.scam_seen || 0} simulated scam payments · ${money(m.scam_usd_held)}`);
     set("#k-legit", m.legit_seen ? pct(m.legit_held / m.legit_seen, 2) : "–");
     set("#k-audit", (m.audit_records || 0).toLocaleString("en-US"));
-    if (chart) {
-      const L = chart.data.labels;
-      L.push(""); chart.data.datasets[0].data.push(m.p50_ms); chart.data.datasets[1].data.push(m.p99_ms); chart.data.datasets[2].data.push(m.tps);
-      if (L.length > 90) { L.shift(); chart.data.datasets.forEach((d) => d.data.shift()); }
-      chart.update("none");
-    }
+    if (charts.length === 2) { pushPoint(charts[0], m.p99_ms); pushPoint(charts[1], m.tps); }
   }
 
   // --------------------------------------------------------------- controls

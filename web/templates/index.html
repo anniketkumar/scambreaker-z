@@ -43,7 +43,10 @@
       <thead><tr><th>Clock</th><th class="r">Amount</th><th>Rail</th><th>A payee</th><th>B behaviour</th><th>C coercion</th><th class="r">Score</th><th>Decision</th><th class="r">ms</th></tr></thead>
       <tbody id="feed"></tbody>
     </table>
-    <div class="chartwrap"><canvas id="latchart"></canvas></div>
+    <div class="charts">
+      <div class="chartbox"><h3>p99 decision latency · ms</h3><div class="chartwrap"><canvas id="latchart"></canvas></div></div>
+      <div class="chartbox"><h3>Throughput · tx/s</h3><div class="chartwrap"><canvas id="tpschart"></canvas></div></div>
+    </div>
   </section>
 
   <section class="panel phonecol">
