@@ -104,8 +104,8 @@ def nnpa(bench: dict, out: Path) -> None:
         return
     fig, ax = plt.subplots(figsize=(9, 4.8))
     on_z = bench.get("machine") == "s390x"
-    series = [(keys[0], "default placement (Telum NNPA)" if on_z else "default placement", S1),
-              ("cpu", "CPU only (pinned)", S2)]
+    series = [(keys[0], "with ibm-zdnn-plugin (Telum NNPA)" if on_z else "default", S1),
+              ("cpu", "plain TensorFlow CPU kernels", S2)]
     for key, label, color in series:
         b = [r["batch"] for r in res[key]]
         us = [r["us_per_tx"] for r in res[key]]
@@ -120,10 +120,10 @@ def nnpa(bench: dict, out: Path) -> None:
     ax.set_ylabel("µs per transfer")
     ax.legend(frameon=False, labelcolor=INK2, loc="upper right")
     acc, cpu = res[keys[0]][-1]["us_per_tx"], res["cpu"][-1]["us_per_tx"]
-    verdict = (f"default placement is {cpu / acc:.1f}x faster than CPU at batch {batches[-1]}" if acc < cpu
-               else f"CPU is {acc / cpu:.1f}x faster than default placement at batch {batches[-1]}")
-    _title(ax, "LSTM scoring cost per transfer: accelerator vs CPU",
-           f"same model, same inputs · {bench.get('machine', '')} · {verdict}")
+    verdict = (f"accelerator {cpu / acc:.1f}x faster at batch {batches[-1]}; CPU wins on tiny batches" if acc < cpu
+               else f"CPU {acc / cpu:.1f}x faster at batch {batches[-1]}")
+    _title(ax, "Behaviour-model (LSTM) cost per transfer, same model and inputs",
+           f"IBM z17 · {verdict}")
     fig.tight_layout()
     fig.savefig(out / "nnpa_vs_cpu.png", dpi=160)
     plt.close(fig)

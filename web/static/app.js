@@ -289,8 +289,9 @@
     if (!p) return;
     const s = p.services || {}, sc = s.scorer || {}, g = s.genai || {}, h = p.host || {}, m = p.metrics || {};
     const mt = (p.cpu?.processor0 || "").match(/machine\s*=\s*(\w+)/);
-    const lat = sc.lstm_batch128_ms || {};
-    const speed = lat.default && lat.cpu ? (lat.cpu / lat.default).toFixed(1) : null;
+    const ab = sc.lstm_ab || {};
+    const speed = ab.nnpa_us_per_tx && ab.cpu_us_per_tx ? (ab.cpu_us_per_tx / ab.nnpa_us_per_tx).toFixed(1) : null;
+    const zlibs = sc.zdnn_libs || [];
     const archs = ["web", "scorer", "genai", "replayer"].map((k) => `${k}: ${k === "web" ? p.web?.machine : (s[k]?.machine || "–")}`).join(" · ");
     $("#proof-body").innerHTML = [
       check(p.web?.machine === "s390x", "Running on IBM Z (s390x)", esc(archs)),

@@ -20,7 +20,7 @@ import numpy as np
 from . import config
 from .data.events import KIND_HARDNEG, KIND_ORIG, KIND_PERSONA, load_stream
 from .evaluate import binary_metrics, policy_metrics, pr_curve
-from .features.engine import A_FEATURES, N_A, N_SEQ, FeatureEngine
+from .features.engine import N_A, N_SEQ, FeatureEngine
 from .models import behavior_lstm, coercion_lr, mule_xgb, typology
 from .models.fusion import Stacker
 
@@ -155,7 +155,7 @@ def main() -> None:
     use_tf = behavior_lstm.tf_available()
     t = time.time()
     if use_tf:
-        meta_b = behavior_lstm.train(SEQ_b[tr], y_b[tr], SEQ_b[va], y_b[va], args.models, epochs=args.epochs)
+        behavior_lstm.train(SEQ_b[tr], y_b[tr], SEQ_b[va], y_b[va], args.models, epochs=args.epochs)
         model_b = behavior_lstm.BehaviorModel(args.models)
         P_B = model_b.predict(SEQ_b)
     else:
@@ -245,10 +245,10 @@ def main() -> None:
         "ablation_test": ablation,
         "holdout_typology": holdout,
         "timings": timings,
-        "features_a": list(A_FEATURES),
+        "features_a": mule_xgb.NAMES,
     }
     (args.results / "metrics.json").write_text(json.dumps(report, indent=2, default=float))
-    (args.models / "feature_names.json").write_text(json.dumps({"A": list(A_FEATURES)}))
+    (args.models / "feature_names.json").write_text(json.dumps({"A": mule_xgb.NAMES}))
     serve_meta = {k: meta[k] for k in ("personas", "scenario_payees", "day0", "usd_rates", "periods")}
     serve_meta["aml_threshold"] = aml_threshold
     (args.models / "serve_meta.json").write_text(json.dumps(serve_meta, indent=2, default=float))

@@ -1,0 +1,104 @@
+{
+  "machine": "s390x",
+  "tf_version": "2.18.1",
+  "tf_devices": [
+    "CPU:/physical_device:CPU:0"
+  ],
+  "zdnn_libs": {
+    "nnpa": [
+      "_z_ops.so",
+      "libzdnn.so.0"
+    ],
+    "cpu": []
+  },
+  "results": {
+    "nnpa": [
+      {
+        "batch": 1,
+        "median_ms": 1.0991,
+        "p95_ms": 3.3912,
+        "us_per_tx": 1099.091,
+        "tx_per_s": 909.8
+      },
+      {
+        "batch": 8,
+        "median_ms": 0.9607,
+        "p95_ms": 1.5083,
+        "us_per_tx": 120.083,
+        "tx_per_s": 8327.6
+      },
+      {
+        "batch": 32,
+        "median_ms": 1.1442,
+        "p95_ms": 2.9445,
+        "us_per_tx": 35.757,
+        "tx_per_s": 27966.6
+      },
+      {
+        "batch": 128,
+        "median_ms": 1.6501,
+        "p95_ms": 7.1524,
+        "us_per_tx": 12.892,
+        "tx_per_s": 77569.7
+      },
+      {
+        "batch": 512,
+        "median_ms": 2.3937,
+        "p95_ms": 7.5522,
+        "us_per_tx": 4.675,
+        "tx_per_s": 213894.4
+      },
+      {
+        "batch": 2048,
+        "median_ms": 7.2621,
+        "p95_ms": 11.7073,
+        "us_per_tx": 3.546,
+        "tx_per_s": 282011.4
+      }
+    ],
+    "cpu": [
+      {
+        "batch": 1,
+        "median_ms": 0.3991,
+        "p95_ms": 0.6188,
+        "us_per_tx": 399.074,
+        "tx_per_s": 2505.8
+      },
+      {
+        "batch": 8,
+        "median_ms": 0.4399,
+        "p95_ms": 0.55,
+        "us_per_tx": 54.982,
+        "tx_per_s": 18187.7
+      },
+      {
+        "batch": 32,
+        "median_ms": 0.6045,
+        "p95_ms": 0.6926,
+        "us_per_tx": 18.89,
+        "tx_per_s": 52939.5
+      },
+      {
+        "batch": 128,
+        "median_ms": 1.5074,
+        "p95_ms": 2.0158,
+        "us_per_tx": 11.776,
+        "tx_per_s": 84917.2
+      },
+      {
+        "batch": 512,
+        "median_ms": 4.9791,
+        "p95_ms": 6.6475,
+        "us_per_tx": 9.725,
+        "tx_per_s": 102830.7
+      },
+      {
+        "batch": 2048,
+        "median_ms": 14.7043,
+        "p95_ms": 21.5955,
+        "us_per_tx": 7.18,
+        "tx_per_s": 139278.7
+      }
+    ]
+  }
+}

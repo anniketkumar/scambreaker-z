@@ -1,8 +1,11 @@
-"""Model B (LSTM) inference: default placement (Telum NNPA via ibm-zdnn-plugin) vs CPU.
+"""Model B (LSTM) inference with and without the IBM zDNN plugin (Telum NNPA).
 
-Same trained model, same inputs, across batch sizes.
-    python -m scambreaker.bench.nnpa_bench --models /secure/work/models --out /secure/work/results/nnpa_bench.json
-    python -m scambreaker.bench.nnpa_bench --mode default --label no-plugin   # run in a container without the plugin
+The ibm-zdnn-plugin is a kernel library (tensorflow/core/kernels/_z_ops.so) that TensorFlow
+loads at import; it swaps in zDNN-backed kernels behind the normal CPU device, so pinning to
+/CPU:0 does not switch it off. The fair A/B is therefore two runs of the same model on the
+same inputs: one normal, one in a container where the plugin directory is hidden.
+    python -m scambreaker.bench.nnpa_bench --mode default --label nnpa
+    (container with --tmpfs .../tensorflow/core/kernels)  ... --mode default --label cpu
 """
 from __future__ import annotations
 
@@ -49,9 +52,11 @@ def main() -> None:
     if args.mode in ("both", "cpu"):
         models["cpu"] = behavior_lstm.BehaviorModel(args.models, device="cpu")
     tf = next(iter(models.values())).tf
+    maps = Path("/proc/self/maps").read_text() if Path("/proc/self/maps").exists() else ""
+    libs = sorted({ln.split()[-1].rsplit("/", 1)[-1] for ln in maps.splitlines() if "zdnn" in ln.lower() or "_z_ops" in ln})
     out = {"machine": platform.machine(), "tf_version": tf.__version__,
            "tf_devices": [f"{d.device_type}:{d.name}" for d in tf.config.list_physical_devices()],
-           "results": {}}
+           "zdnn_libs": {name: libs for name in models}, "results": {}}
     for b in [int(v) for v in args.batches.split(",")]:
         x = rng.normal(size=(b, config.SEQ_LEN, N_SEQ)).astype(np.float32)
         x[:, :, 0] = 1.0
@@ -64,7 +69,8 @@ def main() -> None:
     prev = json.loads(args.out.read_text()) if args.out.exists() and args.mode != "both" else {}
     if prev:
         prev.setdefault("results", {}).update(out["results"])
-        out = {**prev, "results": prev["results"]}
+        prev.setdefault("zdnn_libs", {}).update(out["zdnn_libs"])
+        out = {**out, "results": prev["results"], "zdnn_libs": prev["zdnn_libs"]}
     args.out.write_text(json.dumps(out, indent=2))
     print("saved", args.out)
 

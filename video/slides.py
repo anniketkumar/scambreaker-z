@@ -74,7 +74,7 @@ def img_data(path: Path) -> str:
 
 def slides(ctx: dict) -> dict[str, str]:
     s = {}
-    s["hook"] = f"""
+    s["hook"] = """
 <div class="kicker">Singapore · 2025</div>
 <div class="hero">S$913.1M</div>
 <div class="h2">lost to scams &nbsp;·&nbsp; 37,308 scam cases</div>

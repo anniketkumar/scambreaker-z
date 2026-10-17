@@ -81,7 +81,7 @@ def _fill_time(r: np.ndarray) -> None:
     r["day"] = r["t"] // 1440
 
 
-def _scam_episode(rng, typ, victim, mules, m, period, ep_id, banks):
+def _scam_episode(rng, typ, victim, mules, m, period, ep_id, banks, p_cross):
     spec = EPISODE[typ]
     n = int(rng.integers(spec["n"][0], spec["n"][1] + 1))
     kind = spec["amount"][0]
@@ -121,7 +121,8 @@ def _scam_episode(rng, typ, victim, mules, m, period, ep_id, banks):
             payee = int(rng.choice(mules))
         r["dst"][i] = payee
         r["fmt"][i] = FMT_CODE[fmts[i]]
-        r["cross_cur"][i] = 1 if fmts[i] == "Bitcoin" else int(fmts[i] == "Wire" and rng.random() < 0.25)
+        # cross-currency follows the real data's rate for this rail (no synthetic fingerprint)
+        r["cross_cur"][i] = int(rng.random() < p_cross[FMT_CODE[fmts[i]]])
         if payee not in first_seen:
             first_seen[payee] = (int(ts[i]), float(_lognormal(rng, *first_added)))
             r["payee_added_min"][i] = first_seen[payee][1]
@@ -233,6 +234,13 @@ def augment(ev0: np.ndarray, keys0: np.ndarray, n_train_episodes: int | None = N
     if len(victim_pool) < 50 or len(legit_payees) < 10:
         raise ValueError(f"pools too small: victims={len(victim_pool)} legit_payees={len(legit_payees)}")
 
+    # empirical P(cross-currency | rail) for retail digital transfers in the real data
+    p_cross = np.zeros(len(config.PAYMENT_FORMATS))
+    retail_out = out_dig & retail[src]
+    for code in range(len(p_cross)):
+        sel = retail_out & (ev0["fmt"] == code)
+        p_cross[code] = float(ev0["cross_cur"][sel].mean()) if sel.any() else 0.0
+
     bank_of = np.array([k.split(":", 1)[0] for k in keys0], dtype=object)
     banks = np.concatenate([bank_of, np.array(["DEMO"] * len(PERSONAS), dtype=object)])
 
@@ -261,7 +269,7 @@ def augment(ev0: np.ndarray, keys0: np.ndarray, n_train_episodes: int | None = N
             v = int(victims[vi]); vi += 1
             typ = typs[int(rng.choice(len(typs), p=probs))]
             m = float(np.clip(med_amt[v], 30.0, 3000.0))
-            parts.append(_scam_episode(rng, typ, v, mules, m, (d_lo, d_hi), ep_id, banks))
+            parts.append(_scam_episode(rng, typ, v, mules, m, (d_lo, d_hi), ep_id, banks, p_cross))
             ep_id += 1
         for _ in range(n_hn[split]):
             v = int(victims[vi]); vi += 1
@@ -313,6 +321,7 @@ def augment(ev0: np.ndarray, keys0: np.ndarray, n_train_episodes: int | None = N
         "n_legit_payees": int(len(legit_payees)),
         "personas": persona_meta,
         "scenario_payees": scenario_payees,
+        "p_cross_by_rail": {config.PAYMENT_FORMATS[i]: round(float(v), 5) for i, v in enumerate(p_cross)},
         "seed": seed,
     }
     return ev, keys.astype(str), retail_all, meta

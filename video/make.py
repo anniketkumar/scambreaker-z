@@ -66,8 +66,8 @@ def fill(text: str, live: dict, metrics: dict, nnpa: dict | None) -> str:
         if dflt and cpu and nnpa.get("machine") == "s390x":
             speed = cpu[-1]["us_per_tx"] / dflt[-1]["us_per_tx"]
             if speed >= 1.2:
-                nnpa_text = (f"The behaviour model runs on the Telum processor's on-chip AI accelerator, "
-                             f"{speed:.1f} times faster than the CPU in our benchmark.")
+                nnpa_text = (f"The behaviour model runs on the Telum processor's on-chip AI accelerator, which scores "
+                             f"large batches {speed:.1f} times faster than the CPU in our benchmark.")
             else:
                 nnpa_text = "The behaviour model is scored on the Telum processor in micro-batches of transfers."
     vals = {
@@ -77,6 +77,7 @@ def fill(text: str, live: dict, metrics: dict, nnpa: dict | None) -> str:
         "nnpa_text": nnpa_text,
         "scam_usd": f"{100 * pol['scam_payments']['usd_share_held']:.0f}",
         "legit_hold": f"{100 * pol['legit']['hold_or_more']:.1f}",
+        "b_only": f"{100 * metrics['ablation_test']['B']['scam_usd_share_held']:.0f}",
     }
     return text.format(**vals)
 

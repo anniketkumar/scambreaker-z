@@ -275,27 +275,27 @@ def run(argv: list[str] | None = None) -> None:
 
 
 def accel_probe(sc: Scorer) -> dict:
-    """Same model, same inputs: accelerator placement vs pinned CPU (reported on the proof panel)."""
+    """Evidence for the proof panel: which zDNN libraries this scorer process has loaded, plus
+    the offline A/B benchmark (same LSTM with vs without the ibm-zdnn-plugin)."""
     info: dict = {}
     try:
         tf = sc.B.tf
         info["tf_version"] = tf.__version__
         info["tf_devices"] = [f"{d.device_type}:{d.name.split(':')[-1]}" for d in tf.config.list_physical_devices()]
-        x = np.random.default_rng(0).normal(size=(128, config.SEQ_LEN, N_SEQ)).astype(np.float32)
-        x[:, :, 0] = 1.0
-        cpu = behavior_lstm.BehaviorModel(sc.model_dir, device="cpu")
-        res = {}
-        for name, model in (("default", sc.B), ("cpu", cpu)):
-            model.predict(x, normalized=True)
-            runs = []
-            for _ in range(30):
-                t0 = time.perf_counter()
-                model.predict(x, normalized=True)
-                runs.append((time.perf_counter() - t0) * 1000)
-            res[name] = round(float(np.median(runs)), 3)
-        info["lstm_batch128_ms"] = res
+        maps = Path("/proc/self/maps").read_text()
+        info["zdnn_libs"] = sorted({ln.split()[-1].rsplit("/", 1)[-1] for ln in maps.splitlines()
+                                    if "zdnn" in ln.lower() or "_z_ops" in ln})
     except Exception as e:  # noqa: BLE001
         info["accel_probe_error"] = repr(e)[:300]
+    bench = config.RESULTS_DIR / "nnpa_bench.json"
+    if bench.exists():
+        try:
+            res = json.loads(bench.read_text())["results"]
+            if "nnpa" in res and "cpu" in res:
+                info["lstm_ab"] = {"batch": res["nnpa"][-1]["batch"], "nnpa_us_per_tx": res["nnpa"][-1]["us_per_tx"],
+                                   "cpu_us_per_tx": res["cpu"][-1]["us_per_tx"]}
+        except (OSError, ValueError, KeyError):
+            pass
     return info
 
 
