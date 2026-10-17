@@ -957,8 +957,8 @@ function charts() {
     { name: "Telum NNPA (ibm-zdnn-plugin)", color: "var(--s1)", pts: nn },
     { name: "CPU kernels (plugin hidden)", color: "var(--s2)", pts: cpu },
   ], { aria: "NNPA vs CPU", logX: true, logY: true, xr: [1, 2048], yr: [2, 2000], yt: [2, 10, 100, 1000], xt: [1, 8, 32, 128, 512, 2048], xlabel: "transfers per accelerator call",
-    band: [256, 2048, "NNPA 2× faster"], tipx: v => "batch " + v, tipy: v => v + " µs/tx",
-    cap: "Below about 256 transfers per call the CPU path is faster, so the accelerator pays off at bank-scale volume. At batch 2048: 3.55 vs 7.18 µs per transfer.",
+    band: [512, 2048, "NNPA 2× faster"], tipx: v => "batch " + v, tipy: v => v + " µs/tx",
+    cap: "At 128 transfers per call or fewer the CPU path is as fast or faster; from 512 the accelerator is about 2× faster, so it pays off at bank-scale volume. At batch 2048: 3.55 vs 7.18 µs per transfer.",
     table: `<table><thead><tr><th class="r">Batch</th><th class="r">NNPA µs/tx</th><th class="r">CPU µs/tx</th></tr></thead><tbody>${nn.map((p, i) => `<tr><td class="r">${p[0]}</td><td class="r">${p[1]}</td><td class="r">${cpu[i][1]}</td></tr>`).join("")}</tbody></table>` });
 
   const p50 = [[500, 58.05], [1000, 77.16], [2020, 59.48], [4020, 34.15]], p99 = [[500, 117.43], [1000, 112.72], [2020, 67.45], [4020, 43.11]];
@@ -967,7 +967,7 @@ function charts() {
     { name: "p50", color: "var(--s1)", pts: p50 },
   ], { aria: "Latency", xr: [0, 4500], yr: [0, 130], yt: [0, 40, 80, 120], xt: [500, 1000, 2000, 3000, 4000], xlabel: "sustained transfers per second",
     tipx: v => v.toLocaleString() + " tx/s", tipy: v => v + " ms",
-    cap: "p99 stays under 120 ms at every sustained load up to 4,020 tx/s. One scorer saturates near 5,200 tx/s on 3 vCPUs.",
+    cap: "p99 stays under 120 ms at every sustained load we tested, from 500 to 4,020 tx/s. One scorer saturates near 5,200 tx/s on 3 vCPUs.",
     table: `<table><thead><tr><th class="r">tx/s</th><th class="r">p50 ms</th><th class="r">p99 ms</th></tr></thead><tbody>${p50.map((p, i) => `<tr><td class="r">${p[0].toLocaleString()}</td><td class="r">${p[1]}</td><td class="r">${p99[i][1]}</td></tr>`).join("")}<tr><td class="r">5,222 (max)</td><td class="r">saturated</td><td class="r">saturated</td></tr></tbody></table>` });
 }
 
