@@ -28,7 +28,7 @@ The only moment to act is between "Send" and settlement, and at most large banks
 | **Respond** (on-box generative AI) | **IBM Granite 3.3 2B**, served by llama.cpp on the same LinuxONE server, writes the warning in the customer's language (English and Chinese in the demo), an SMS to a trusted family member, and the analyst's case narrative, grounded in our policy and typology documents (BM25 RAG). Guardrails reject links, phone numbers or mismatched amounts and fall back to vetted templates. **The LLM explains decisions; it never makes them.** |
 
 Three live scenarios, all with fictional people and a fictional "Demo Bank":
-- **Mdm Tan, 72.** A caller posing as a government officer pushes her to move S$18,500 to a "safe account". The transfer is held or blocked in about 5 ms, and Granite warns her in English and Chinese and alerts her daughter.
+- **Mdm Tan, 72.** A caller posing as a government officer pushes her to move S$18,500 to a "safe account". The transfer is blocked within milliseconds (16 ms in our recorded run), and Granite warns her in English and Chinese and alerts her daughter.
 - **Ravi.** A crypto "investment" asks for ever-bigger top-ups. The first payment is blocked, so the escalation never happens.
 - **Aisha.** Genuine university fees to a new payee get only a gentle NUDGE (payee check), not a hold.
 
@@ -39,7 +39,7 @@ Everything below was measured on our LinuxONE Community Cloud VM: an **IBM z17**
 | Capability | How ScamBreaker-Z uses it | Evidence |
 |---|---|---|
 | **Telum on-chip AI accelerator (NNPA)** | The behaviour LSTM runs through TensorFlow with IBM's `ibm-zdnn-plugin` (zDNN kernels). | Same model, same inputs: **3.55 µs vs 7.18 µs per transfer at batch 2048 (2.0×)** and 4.67 vs 9.72 µs at batch 512 (2.1×). The gain is for bank-scale batches: at 128 transfers per call or fewer, the plain CPU kernels are as fast or faster, and our live demo's calls are that small (a few to a few dozen transfers), so the demo itself does not run faster on the accelerator. A/B by hiding the plugin; `libzdnn.so.0` and `_z_ops.so` are verified mapped in the serving process. [chart](docs/results/nnpa_vs_cpu.png) |
-| **IBM Z vector extensions (VXE)** | IBM Granite runs in a llama.cpp server we built for s390x with VXE enabled. | **5.0 tokens/s vs 1.35 tokens/s** for the prebuilt image's build without VXE (3.7×), for Granite 3.3 2B Q8_0 (big-endian GGUF). |
+| **IBM Z vector extensions (VXE)** | IBM Granite runs in a llama.cpp server we built for s390x with VXE enabled. | **5.0 tokens/s vs 1.35 tokens/s** for the prebuilt image's build without VXE (3.7×), for Granite 3.3 2B Q8_0 (big-endian GGUF), measured on an idle VM. While the live demo shares the 3 vCPUs with the replay, Granite runs at about 2–2.5 tokens/s, so its messages take about 3 minutes. |
 | **CPACF crypto + encryption at rest** | All data, models and the audit trail live on a **LUKS2 volume (AES-XTS, 512-bit key)**. The kernel uses the `xts-aes-s390` driver, i.e. the CPACF crypto unit. | `cryptsetup status`, `/proc/crypto` ([evidence](docs/evidence/)) |
 | **Containers + isolation** | Docker Compose with six services. The AI services sit on an `internal` network **with no route to the internet**, run as non-root with all capabilities dropped and `no-new-privileges`. | Live check: an outbound connection from the Granite container fails ([evidence](docs/evidence/)) |
 | **Tamper-evident audit** | Every non-ALLOW decision is appended to a SHA-256 hash-chained log; `verify` detects any edit. | Live "Platform proof" panel → *Verify hash chain now* |
@@ -49,7 +49,7 @@ The console's **Platform proof** panel recomputes these facts live on the server
 
 ![Platform proof panel, measured live on the LinuxONE VM](docs/evidence/screenshots/02_platform_proof.png)
 
-More screenshots: [LinuxONE portal](docs/evidence/screenshots/01_l1cc_portal.png) · [live console](docs/evidence/screenshots/03_console_live.png) · [terminal on the VM: s390x, z17, nnpa, containers](docs/evidence/screenshots/05_vm_terminal_cpu.png) · [LUKS2, CPACF, no egress, audit chain](docs/evidence/screenshots/04_vm_terminal.png)
+More screenshots: [LinuxONE portal (instance created 17 Oct 2026, during the event)](docs/evidence/screenshots/01_l1cc_portal.png) · [live console](docs/evidence/screenshots/03_console_live.png) · [terminal on the VM: s390x, z17, nnpa, containers](docs/evidence/screenshots/05_vm_terminal_cpu.png) · [LUKS2, CPACF, no egress, audit chain](docs/evidence/screenshots/04_vm_terminal.png)
 
 ## Results
 
